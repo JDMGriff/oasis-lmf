@@ -12,7 +12,7 @@ $cta = get_field('cta');
             <div class="hero-content">
                 <!-- Hero Title -->
                 <?php if ($heroTitle) { ?>
-                    <h1 class="hero-title font-semibold uppercase text-white text-[clamp(32px,6vw,65px)] leading-none w-100 xl:max-w-[65%] mb-6">
+                    <h1 class="hero-title font-semibold uppercase text-white text-[clamp(32px,6vw,60px)] leading-none w-100 xl:max-w-[70%] mb-6">
                         <?php echo $heroTitle; ?>
                     </h1>
                 <?php } ?>
