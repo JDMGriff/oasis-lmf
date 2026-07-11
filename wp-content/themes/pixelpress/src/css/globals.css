@@ -7,6 +7,7 @@
 :root {
     /* Brand Colours */
     --brand-red: #D9272D;
+    --off-white: #F6F6F6;
 }
 
 * {
@@ -36,7 +37,24 @@ h2 {
     font-size: 44px;
 }
 h3 {
-    font-size: 35px;
+    font-size: 40px;
+    text-transform: uppercase;
+    font-weight: bold;
+    padding-left: 14px;
+    position: relative;
+}
+h3.title-mark::before {
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;    
+    background-image: url('/wp-content/themes/pixelpress/dist/images/title-mark.svg');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    position: absolute;
+    left: 0;
+    top: 0;
 }
 h4 {
     font-size: 28px;

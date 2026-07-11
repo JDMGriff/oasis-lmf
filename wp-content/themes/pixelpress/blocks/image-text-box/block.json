@@ -1,0 +1,27 @@
+{
+    "$schema": "https://raw.githubusercontent.com/AdvancedCustomFields/schemas/refs/heads/main/json/block.json",
+    "apiVersion": 3,   
+    "name": "pixelpress/image-text-box",
+    "title": "Image Text Box",
+    "description": "Block with image background and text on top.",
+    "category": "pixelpress-components",
+    "icon": "cover-image",
+    "keywords": [
+        "hero",
+        "banner"
+    ],
+    "acf": {
+        "blockVersion": 3,
+        "renderTemplate": "render.php",
+        "hideFieldsInSidebar": true,
+        "expandedEditorButtonText": "Edit Image Text Box",
+        "expandedEditorButtons": {
+            "sidebar": false,
+            "toolbar": true
+        }
+    },
+    "supports": {
+        "align": false,
+        "customClassName": false        
+    }
+}
