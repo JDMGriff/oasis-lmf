@@ -3,10 +3,10 @@ const BrowserSyncPlugin = require('browser-sync-webpack-plugin');
 var path = require('path');
 
 // change these variables to fit your project
-const jsPath = '/build/js';
-const cssPath = '/build/css';
+const jsPath = '/src/js';
+const cssPath = '/src/css';
 const outputPath = 'dist';
-const localDomain = 'http://samiad.local/';
+const localDomain = 'http://oasis-lmf.local/';
 const entryPoints = {
   'app': jsPath + '/app.js',
   'style': cssPath + '/globals.css',
@@ -36,7 +36,12 @@ module.exports = {
         test: /\.css$/i,
         use: [
           MiniCssExtractPlugin.loader,
-          'css-loader',
+          {
+            loader: 'css-loader',
+            options: {
+              url: false,
+            },
+          },
           'postcss-loader',
         ],
       },

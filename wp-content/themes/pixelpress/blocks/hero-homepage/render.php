@@ -6,7 +6,7 @@ $usps = get_field('usps');
 $cta = get_field('cta');
 ?>
 
-<section class="hero-main py-10 lg:py-40" style="<?php if ($heroImage) {?> background-image: url(<?php echo esc_url($heroImage['url']); ?>); <?php } ?>">
+<section class="hero-main py-10 lg:py-40 bg-cover bg-center" style="<?php if ($heroImage) {?> background-image: url(<?php echo esc_url($heroImage['url']); ?>); <?php } ?>">
     <div class="container">
         <div class="hero-inner">
             <div class="hero-content">
