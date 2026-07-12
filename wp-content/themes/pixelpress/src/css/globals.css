@@ -8,6 +8,7 @@
     /* Brand Colours */
     --brand-red: #D9272D;
     --off-white: #F6F6F6;
+    --off-black: #111111;
 }
 
 * {
@@ -48,7 +49,7 @@ h3.title-mark::before {
     display: inline-block;
     width: 16px;
     height: 16px;    
-    background-image: url('/wp-content/themes/pixelpress/dist/images/title-mark.svg');
+    background-image: url('./images/title-mark.svg');
     background-position: center;
     background-repeat: no-repeat;
     background-size: contain;
@@ -76,7 +77,7 @@ h5 {
 .primary-cta {
     display: inline-block;
     width: max-content;
-    padding: 16px 24px;
+    padding: clamp(12px, 2.5vw, 18px) clamp(16px, 4vw, 24px);
     color: white;
     font-size: 18px;
     background-color: var(--brand-red);
@@ -89,7 +90,7 @@ h5 {
     width: 21px;
     height: 14px;
     margin-left: 8px;
-    background-image: url('/wp-content/themes/pixelpress/dist/images/button-arrow.svg');
+    background-image: url('./images/button-arrow.svg');
     background-position: center;
     background-repeat: no-repeat;
     background-size: contain;
@@ -186,4 +187,45 @@ ul.nav-menu li.active a {
     to {
         transform: translateX(-12.5%);
     }
+}
+/* Image Text Box hover effect */
+.image-text-box-item {
+    transition: all .3s ease-in-out;
+}
+.image-text-box-item:hover {
+    transition: all .3s ease-in-out;
+    transform: translateY(-8px);
+    box-shadow: 0 12px 60px rgba(0,0,0,0.3);
+}
+.image-text-box-item-hoveroverlay {
+    width: 0px;
+    height: 0px;
+    border-radius: 9999px;
+    right: -50%;
+    top: -50%;
+    transition: all .5s ease-in-out;
+}
+.image-text-box-item:hover .image-text-box-item-hoveroverlay {
+    width: 200%;
+    height: 200%;
+    border-radius: 0;
+    transition: all .5s ease-in-out;
+}
+.image-text-box-item-logomark {
+    position: absolute;
+    top: 0;
+    right: 0;
+    opacity: 0;
+    transition: all .5s ease-in-out;
+}
+.image-text-box-item:hover .image-text-box-item-logomark {
+    opacity: 1;
+    transition: all .5s ease-in-out;
+}
+.image-text-box-item .primary-cta {
+    transition: all .3s ease-in-out;
+}
+.image-text-box-item:hover .primary-cta {
+    background-color: var(--off-black);
+    transition: all .3s ease-in-out;
 }
