@@ -57,6 +57,19 @@ h3.title-mark::before {
     left: 0;
     top: 0;
 }
+h3.title-mark-white::before {
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;    
+    background-image: url('./images/title-mark-white.svg');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
 h4 {
     font-size: 28px;
 }
@@ -68,6 +81,17 @@ h5 {
     max-width: 1400px;
     margin: 0 auto;
     padding: 16px 0;
+}
+.red-grad-bg {
+    background: url('images/logomark-semi-circle.svg'), linear-gradient(125deg, rgba(212, 31, 41, 1) 0%, rgba(139, 33, 41, 1) 100%);
+    background-position: center left;
+    background-size: auto 100%;
+    background-repeat: no-repeat;
+}
+@media (max-width: 600px) {
+    .red-grad-bg {
+        background-position: top left;
+    }
 }
 /* Gutenberg backend container override */
 .editor-styles-wrapper .is-root-container .wp-block {
@@ -90,7 +114,7 @@ h5 {
     width: 21px;
     height: 14px;
     margin-left: 8px;
-    background-image: url('./images/button-arrow.svg');
+    background-image: url('images/button-arrow.svg');
     background-position: center;
     background-repeat: no-repeat;
     background-size: contain;
