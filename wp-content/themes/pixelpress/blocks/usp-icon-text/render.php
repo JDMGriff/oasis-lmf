@@ -3,7 +3,7 @@ $mainTitle = get_field('main_title');
 $uspItems = get_field('usp_items');
 ?>
 
-<section class="usp-icon-text-block red-grad-bg py-10 lg:py-40 bg-cover bg-center bg-[var(--off-white)] red-grad-bg">
+<section class="usp-icon-text-block red-grad-bg-with-logomark py-10 lg:py-40 bg-cover bg-center bg-[var(--off-white)]">
     <div class="container mx-auto px-4">
         <h3 class="title-mark-white text-white mb-10"><?php echo $mainTitle ?></h3>
 
