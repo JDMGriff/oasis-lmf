@@ -5,9 +5,15 @@
 <?php if($showLatestBlogs === true): ?>
 <section class="latest-blogs py-20 bg-[var(--off-white)]">
     <div class="container mx-auto px-4">
-        <h3 class="title-mark mb-4">
-            <?php echo $title ?>
-        </h3>
+        <div class="w-full flex items-center justify-between">
+            <h3 class="title-mark mb-4">
+                <?php echo $title ?>
+            </h3>
+
+            <a class="all-news-rm text-[var(--brand-red)] font-semibold" href="/news/">
+                View all news 
+            </a>
+        </div>
         <!-- Blog Loop -->
         <?php
         $latest_posts = new WP_Query([
