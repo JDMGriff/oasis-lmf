@@ -804,6 +804,9 @@ video {
 .text-white\/70{
   color: rgb(255 255 255 / 0.7);
 }
+.text-\[var\(--brand-red\)\]{
+  color: var(--brand-red);
+}
 
 /* Custom global styles */
 :root {
@@ -1149,6 +1152,23 @@ ul.nav-menu li.active a {
     transform: translateX(4px);
     transition: all .2s ease-in-out;    
 }
+.all-news-rm::after {
+    content: "";
+    background-image: url('images/red-read-more-arrow.svg');
+    display: inline-block;
+    width: 14px;
+    height: 9px;
+    margin-left: 8px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    transition: all .2s ease-in-out;    
+}
+.all-news-rm:hover::after {
+    transform: translateX(4px);
+    transition: all .2s ease-in-out;    
+}
+
 /* Footer Nav */
 .footer-nav-menu {
     display: flex;
