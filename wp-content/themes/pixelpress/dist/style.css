@@ -485,6 +485,9 @@ video {
 .z-0{
   z-index: 0;
 }
+.z-10{
+  z-index: 10;
+}
 .z-\[5\]{
   z-index: 5;
 }
@@ -496,16 +499,19 @@ video {
   margin-top: 1rem;
   margin-bottom: 1rem;
 }
-.my-8{
-  margin-top: 2rem;
-  margin-bottom: 2rem;
-}
 .my-6{
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;
 }
+.my-8{
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
 .mb-10{
   margin-bottom: 2.5rem;
+}
+.mb-4{
+  margin-bottom: 1rem;
 }
 .mb-6{
   margin-bottom: 1.5rem;
@@ -521,12 +527,6 @@ video {
 }
 .mt-4{
   margin-top: 1rem;
-}
-.mt-6{
-  margin-top: 1.5rem;
-}
-.mb-4{
-  margin-bottom: 1rem;
 }
 .block{
   display: block;
@@ -548,6 +548,9 @@ video {
 }
 .h-full{
   height: 100%;
+}
+.w-auto{
+  width: auto;
 }
 .w-full{
   width: 100%;
@@ -582,8 +585,8 @@ video {
 .items-center{
   align-items: center;
 }
-.justify-end{
-  justify-content: flex-end;
+.justify-start{
+  justify-content: flex-start;
 }
 .justify-center{
   justify-content: center;
@@ -608,9 +611,6 @@ video {
 }
 .border{
   border-width: 1px;
-}
-.border-t{
-  border-top-width: 1px;
 }
 .border-\[\#999\]{
   --tw-border-opacity: 1;
@@ -652,6 +652,9 @@ video {
 .bg-top{
   background-position: top;
 }
+.bg-no-repeat{
+  background-repeat: no-repeat;
+}
 .p-10{
   padding: 2.5rem;
 }
@@ -682,9 +685,9 @@ video {
   padding-top: 10rem;
   padding-bottom: 10rem;
 }
-.py-8{
-  padding-top: 2rem;
-  padding-bottom: 2rem;
+.py-20{
+  padding-top: 5rem;
+  padding-bottom: 5rem;
 }
 .pb-10{
   padding-bottom: 2.5rem;
@@ -891,6 +894,34 @@ h5 {
     transform: translateX(4px);
     transition: all .2s ease-in-out;    
 }
+.primary-cta-white {
+    display: inline-block;
+    width: -moz-max-content;
+    width: max-content;
+    padding: clamp(12px, 2.5vw, 18px) clamp(16px, 4vw, 24px);
+    color: var(--brand-red);
+    font-size: 18px;
+    background-color: white;
+    text-align: center;
+    border-radius: 4px;
+    font-weight: 600;
+}
+.primary-cta-white::after {
+    content: "";
+    display: inline-block;
+    width: 21px;
+    height: 14px;
+    margin-left: 8px;
+    background-image: url('images/red-button-arrow.svg');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    transition: all .2s ease-in-out;
+}
+.primary-cta-white:hover::after {
+    transform: translateX(4px);
+    transition: all .2s ease-in-out;    
+}
 /* Menu Styles */
 ul.nav-menu {
     display: flex;
@@ -1022,6 +1053,42 @@ ul.nav-menu li.active a {
     background-color: var(--off-black);
     transition: all .3s ease-in-out;
 }
+/* Gradient Image Text */
+.gradient-overlay {
+    background: #D9272D;
+    background: radial-gradient(circle at 75% center, rgba(217, 39, 45, 0) 0%, rgba(217, 39, 45, 1) 40%, rgba(217, 39, 45, 1) 100%);
+}
+.ods-usp-items p:not(:last-child)::after {
+    content: "";
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    background-color: white;
+    border-radius: 999px;
+    position: relative;
+    top: -10%;
+    left: 16px;
+    margin-right: 32px;
+}
+.ods-bg-img {
+    width: 75%;
+    height: 100%;
+    -o-object-fit: cover;
+       object-fit: cover;
+    -o-object-position: center;
+       object-position: center;
+    flex-shrink: 0;
+}
+@media (min-width: 2000px) {
+    .ods-bg-img {
+        width: 60%;
+    }
+}
+@media (max-width: 764px) {
+    .gradient-overlay {
+        background: radial-gradient(circle at 75% top, rgba(217, 39, 45, 0) 0%, rgba(217, 39, 45, 1) 40%, rgba(217, 39, 45, 1) 100%);
+    }    
+}
 /* Footer Nav */
 .footer-nav-menu {
     display: flex;
@@ -1044,14 +1111,14 @@ ul.nav-menu li.active a {
     margin-top: 0px;
     margin-bottom: 0px;
   }
-  .md\:mr-auto{
-    margin-right: auto;
+  .md\:mb-0{
+    margin-bottom: 0px;
   }
   .md\:ml-0{
     margin-left: 0px;
   }
-  .md\:mb-0{
-    margin-bottom: 0px;
+  .md\:mr-auto{
+    margin-right: auto;
   }
   .md\:hidden{
     display: none;
@@ -1088,6 +1155,9 @@ ul.nav-menu li.active a {
   .lg\:max-w-\[30\%\]{
     max-width: 30%;
   }
+  .lg\:max-w-\[50\%\]{
+    max-width: 50%;
+  }
   .lg\:max-w-\[70\%\]{
     max-width: 70%;
   }
@@ -1100,9 +1170,6 @@ ul.nav-menu li.active a {
   .lg\:py-40{
     padding-top: 10rem;
     padding-bottom: 10rem;
-  }
-  .lg\:text-left{
-    text-align: left;
   }
   .lg\:text-base{
     font-size: 1rem;
