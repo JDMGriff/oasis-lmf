@@ -240,7 +240,7 @@ ul.nav-menu li.active a {
     top: 0;
     right: 0;
     opacity: 0;
-    transition: all .5s ease-in-out;
+    transition: all .3s ease-in-out;
 }
 .image-text-box-item:hover .image-text-box-item-logomark {
     opacity: 1;

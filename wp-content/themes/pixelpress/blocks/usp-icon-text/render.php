@@ -21,7 +21,7 @@ $uspItems = get_field('usp_items');
                         <h4 class="uppercase text-white font-semibold">
                             <?php echo $itemTitle ?>
                         </h4>
-                        <span class="text-white/70">
+                        <span class="text-white/70 text-lg">
                             <?php echo $itemCopy ?>
                         </span>
                     </div>
