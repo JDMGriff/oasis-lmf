@@ -605,9 +605,6 @@ video {
 .border{
   border-width: 1px;
 }
-.border-t{
-  border-top-width: 1px;
-}
 .border-\[\#999\]{
   --tw-border-opacity: 1;
   border-color: rgb(153 153 153 / var(--tw-border-opacity, 1));
@@ -677,10 +674,6 @@ video {
 .py-40{
   padding-top: 10rem;
   padding-bottom: 10rem;
-}
-.py-8{
-  padding-top: 2rem;
-  padding-bottom: 2rem;
 }
 .pb-10{
   padding-bottom: 2.5rem;
