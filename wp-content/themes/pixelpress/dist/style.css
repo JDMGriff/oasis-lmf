@@ -500,6 +500,10 @@ video {
   margin-top: 2rem;
   margin-bottom: 2rem;
 }
+.my-6{
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
 .mb-10{
   margin-bottom: 2.5rem;
 }
@@ -605,6 +609,9 @@ video {
 .border{
   border-width: 1px;
 }
+.border-t{
+  border-top-width: 1px;
+}
 .border-\[\#999\]{
   --tw-border-opacity: 1;
   border-color: rgb(153 153 153 / var(--tw-border-opacity, 1));
@@ -674,6 +681,10 @@ video {
 .py-40{
   padding-top: 10rem;
   padding-bottom: 10rem;
+}
+.py-8{
+  padding-top: 2rem;
+  padding-bottom: 2rem;
 }
 .pb-10{
   padding-bottom: 2.5rem;
@@ -1071,8 +1082,20 @@ ul.nav-menu li.active a {
   }
 }
 @media (min-width: 1024px){
+  .lg\:mb-0{
+    margin-bottom: 0px;
+  }
+  .lg\:max-w-\[30\%\]{
+    max-width: 30%;
+  }
+  .lg\:max-w-\[70\%\]{
+    max-width: 70%;
+  }
   .lg\:grid-cols-3{
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .lg\:flex-row{
+    flex-direction: row;
   }
   .lg\:py-40{
     padding-top: 10rem;
