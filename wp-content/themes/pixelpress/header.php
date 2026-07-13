@@ -16,7 +16,7 @@ $logo = get_field('logo', 'option');
     <div class="container">
         <div class="flex items-center justify-between">
             <a href="<?php echo home_url() ?>">
-                <img class="w-full max-w-[275px]" src="<?php echo $logo['url'] ?>" alt="Samiad Logo">
+                <img class="w-full max-w-[275px]" src="<?php echo $logo['url'] ?>" alt="Logo">
             </a>
     
             <!-- Nav menu -->

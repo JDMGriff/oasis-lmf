@@ -12,6 +12,10 @@ wp-config.php
 
 node_modules/
 dist/
+!wp-content/themes/pixelpress/dist/
+!wp-content/themes/pixelpress/dist/**
+src/
+wp-content/themes/pixelpress/src/
 build/
 .vite/
 .cache/
