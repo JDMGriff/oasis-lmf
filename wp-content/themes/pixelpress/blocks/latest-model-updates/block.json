@@ -1,0 +1,27 @@
+{
+    "$schema": "https://raw.githubusercontent.com/AdvancedCustomFields/schemas/refs/heads/main/json/block.json",
+    "apiVersion": 3,   
+    "name": "pixelpress/latest-model-updates",
+    "title": "Latest Model Updates",
+    "description": "Section to show the latest model updates.",
+    "category": "pixelpress-components",
+    "icon": "cover-image",
+    "keywords": [
+        "hero",
+        "banner"
+    ],
+    "acf": {
+        "blockVersion": 3,
+        "renderTemplate": "render.php",
+        "hideFieldsInSidebar": true,
+        "expandedEditorButtonText": "Edit Latest Model Updates",
+        "expandedEditorButtons": {
+            "sidebar": false,
+            "toolbar": true
+        }
+    },
+    "supports": {
+        "align": false,
+        "customClassName": false        
+    }
+}
