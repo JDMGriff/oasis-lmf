@@ -5,12 +5,12 @@
 <?php if($showLatestBlogs === true): ?>
 <section class="latest-blogs py-20 bg-[var(--off-white)]">
     <div class="container mx-auto px-4">
-        <div class="w-full flex items-center justify-between">
+        <div class="w-full flex flex-col items-start md:flex-row md:items-center justify-between">
             <h3 class="title-mark mb-4">
                 <?php echo $title ?>
             </h3>
 
-            <a class="all-news-rm text-[var(--brand-red)] font-semibold" href="/news/">
+            <a class="text-rm text-[var(--brand-red)] font-semibold mb-6 md:mb-0" href="/news/">
                 View all news 
             </a>
         </div>
@@ -35,7 +35,7 @@
                                 <?php the_post_thumbnail('full'); ?>
                             <?php endif; ?>
 
-                            <div class="text-xs text-white bg-[var(--brand-red)] rounded-full px-2 py-1 inline-block mt-4">
+                            <div class="text-xs text-white bg-[var(--brand-red)] rounded-full px-2 py-1 inline-block mt-4 font-semibold">
                                 <?php echo esc_html(get_the_date('F, Y')); ?>
                             </div>
 
