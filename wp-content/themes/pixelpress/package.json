@@ -4,7 +4,7 @@
   "devDependencies": {
     "autoprefixer": "^10.4.21",
     "browser-sync": "^2.29.3",
-    "browser-sync-webpack-plugin": "^2.3.0",    
+    "browser-sync-webpack-plugin": "^2.3.0",
     "css-loader": "^6.10.0",
     "file-loader": "^6.1.0",
     "mini-css-extract-plugin": "^0.11.2",
@@ -17,5 +17,8 @@
   "scripts": {
     "build": "webpack --mode production",
     "dev": "webpack --mode development --watch"
+  },
+  "dependencies": {
+    "aos": "^2.3.4"
   }
 }

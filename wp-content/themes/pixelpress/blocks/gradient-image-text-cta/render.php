@@ -13,7 +13,7 @@ $bgImage = get_field('background_image');
         <!-- BG Image -->
         <img class="ods-bg-img absolute z-0 right-0 top-0 h-full w-auto" src="<?php echo esc_url($bgImage['url']); ?>" alt="ODS Backgorund Image">
         <!-- Content -->
-        <div class="w-full lg:max-w-[50%] relative z-10">
+        <div data-aos="fade-up" class="w-full lg:max-w-[50%] relative z-10">
             <?php if($title): ?>
                 <h3 class="title-mark-white text-white">
                     <?php echo $title ?>

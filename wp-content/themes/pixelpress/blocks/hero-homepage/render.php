@@ -9,7 +9,7 @@ $cta = get_field('cta');
 <section class="hero-main py-10 lg:py-40 bg-cover bg-center" style="<?php if ($heroImage) {?> background-image: url(<?php echo esc_url($heroImage['url']); ?>); <?php } ?>">
     <div class="container">
         <div class="hero-inner">
-            <div class="hero-content">
+            <div data-aos="fade-up" class="hero-content">
                 <!-- Hero Title -->
                 <?php if ($heroTitle) { ?>
                     <h1 class="hero-title font-semibold uppercase text-white text-[clamp(32px,6vw,60px)] leading-none w-100 xl:max-w-[70%] mb-6">

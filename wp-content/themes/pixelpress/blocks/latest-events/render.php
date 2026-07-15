@@ -24,7 +24,7 @@ $showLogomark = get_field('show_logomark');
         <img class="absolute left-0 top-[-50%]" src="<?php echo get_template_directory_uri(); ?>/dist/images/semi-circle-logomark.svg" alt="Oasis semi circle logomark">
     <?php endif; ?>
 
-    <div class="container mx-aujto px-4">
+    <div data-aos="fade-up" class="container mx-aujto px-4">
         <div class="w-full flex flex-col items-start md:flex-row md:items-center justify-between">
             <h3 class="title-mark mb-4">
                 <?php echo $blockTitle ?>

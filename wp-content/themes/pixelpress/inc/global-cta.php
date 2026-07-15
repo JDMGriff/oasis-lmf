@@ -4,7 +4,7 @@
     $button = get_field('button', 'option');
 ?>
 <section class="py-20">
-    <div class="container mx-auto px-4 text-center">
+    <div data-aos="fade-up" class="container mx-auto px-4 text-center">
         <?php if($title): ?>
             <h3 class="title-mark inline-block">
                 <?php echo $title ?>

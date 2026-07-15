@@ -16,7 +16,7 @@ $imageTextBoxes = get_field('image_text_boxes');
         <h3 class="title-mark mb-10"><?php echo $mainTitle ?></h3>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <?php foreach($imageTextBoxes as $box):
+            <?php foreach($imageTextBoxes as $index => $box):
                 $boxTitle = $box['box_title'];
                 $boxCopy = $box['box_copy'];
                 $boxListItems = $box['box_list_items'];
@@ -26,6 +26,8 @@ $imageTextBoxes = get_field('image_text_boxes');
                 <div
                     class="image-text-box-item bg-cover bg-center relative p-10 rounded-[4px] overflow-hidden"
                     style="<?php if ($boxImage) {?> background-image: url(<?php echo esc_url($boxImage['url']); ?>); <?php } ?>"
+                    data-aos="fade-up"
+                    data-aos-delay="<?php echo esc_attr($index * 100); ?>"
                 >
                     <!-- Image Overlay -->
                     <div class="bg-[rgba(0,0,0,0.6)] w-full h-full inline-block absolute left-0 top-0"></div>

@@ -23,6 +23,20 @@ add_action( 'init', 'register_my_menus' );
 function wpdocs_theme_name_scripts() {
     wp_enqueue_style( 'style', get_stylesheet_uri() );
     wp_enqueue_style('globals', get_template_directory_uri() . '/dist/style.css', array(), '1.0.0', 'all');
+    wp_enqueue_style(
+        'pixelpress-app',
+        get_template_directory_uri() . '/dist/app.css',
+        array(),
+        filemtime(get_template_directory() . '/dist/app.css'),
+        'all'
+    );
+    wp_enqueue_script(
+        'pixelpress-app',
+        get_template_directory_uri() . '/dist/app.js',
+        array(),
+        filemtime(get_template_directory() . '/dist/app.js'),
+        true
+    );
 }
 add_action( 'wp_enqueue_scripts', 'wpdocs_theme_name_scripts' );
 
