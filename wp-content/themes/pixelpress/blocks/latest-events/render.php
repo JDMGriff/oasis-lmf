@@ -15,9 +15,15 @@ $conference = get_posts([
 $blockTitle = get_field('main_title');
 $showLatestEvent = get_field('show_latest_event');
 $webinarCta = get_field('webinar_cta');
+$showLogomark = get_field('show_logomark');
 ?>
 
-<section class="py-20 bg-[var(--off-white)]">
+<section class="latest-events py-20 bg-[var(--off-white)] relative">
+    <!-- Logomark -->
+    <?php if($showLogomark === true): ?>
+        <img class="absolute left-0 top-[-50%]" src="<?php echo get_template_directory_uri(); ?>/dist/images/semi-circle-logomark.svg" alt="Oasis semi circle logomark">
+    <?php endif; ?>
+
     <div class="container mx-aujto px-4">
         <div class="w-full flex flex-col items-start md:flex-row md:items-center justify-between">
             <h3 class="title-mark mb-4">
