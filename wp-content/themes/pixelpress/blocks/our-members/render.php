@@ -24,7 +24,7 @@
         $members = get_field('members');
 
         if ($members) :
-            $members = array_slice($members, 0, 12);
+            $members = $members;
             ?>
 
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mt-10">

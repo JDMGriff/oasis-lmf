@@ -18,7 +18,7 @@ $showLogomark = get_field('show_logomark');
     <?php endif; ?>
 >
     <div class="container px-4 mx-auto">
-        <div class="grid gap-32 grid-cols-1 lg:grid-cols-2">
+        <div class="grid gap-8 lg:gap-32 grid-cols-1 lg:grid-cols-2">
             <?php if($blockTitle): ?>
                 <div class="flex flex-col">
                     <h3 class="title-mark">

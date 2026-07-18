@@ -97,7 +97,7 @@ $showLogomark = get_field('show_logomark');
                 <?php endif; ?>
 
                 <h4 class="text-xl font-semibold mt-4 mb-2">
-                    <a href="<?php echo $webinarCta['link']['url'] ?>">
+                    <a href="<?php echo $webinarCta['link'] ?>">
                         <?php echo $webinarCta['title'] ?>
                     </a>
                 </h4>
@@ -106,8 +106,8 @@ $showLogomark = get_field('show_logomark');
                     <?php echo $webinarCta['copy'] ?>
                 </p>
 
-                <a class="text-rm text-[var(--brand-red)] font-semibold" href="<?php echo $webinarCta['link']['url'] ?>">
-                    <?php echo $webinarCta['link']['title'] ?>
+                <a class="text-rm text-[var(--brand-red)] font-semibold" href="<?php echo $webinarCta['link'] ?>">
+                    View webinar
                 </a>
             </article>
         </div>        

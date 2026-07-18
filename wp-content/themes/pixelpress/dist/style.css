@@ -664,6 +664,9 @@ video {
 .gap-8{
   gap: 2rem;
 }
+.gap-20{
+  gap: 5rem;
+}
 .gap-x-6{
   -moz-column-gap: 1.5rem;
        column-gap: 1.5rem;
@@ -891,6 +894,9 @@ video {
 }
 .leading-tight{
   line-height: 1.25;
+}
+.leading-relaxed{
+  line-height: 1.625;
 }
 .text-\[var\(--brand-red\)\]{
   color: var(--brand-red);
@@ -1446,6 +1452,12 @@ ul.nav-menu li.active a {
   }
   .lg\:flex-row{
     flex-direction: row;
+  }
+  .lg\:gap-20{
+    gap: 5rem;
+  }
+  .lg\:gap-32{
+    gap: 8rem;
   }
   .lg\:py-40{
     padding-top: 10rem;
