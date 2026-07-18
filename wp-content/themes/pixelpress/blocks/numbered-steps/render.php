@@ -2,6 +2,7 @@
 $blockTitle = get_field('block_title');
 $blockCopy = get_field('block_copy');
 $steps = get_field('steps');
+$stepTotal     = is_array($steps) ? count($steps) : 0;
 ?>
 
 <section
@@ -29,11 +30,9 @@ $steps = get_field('steps');
             <?php endif; ?>
 
             <!-- Steps -->
-            <?php if($steps):
-                $stepCount = 1;    
-            ?>
+            <?php if($steps):?>
                 <div class="flex flex-col">
-                    <?php foreach( $steps as $step ):
+                    <?php foreach ($steps as $index => $step):
                         $stepTitle = $step['step_title'];
                         $stepCopy = $step['step_copy'];
                     ?>
@@ -41,7 +40,7 @@ $steps = get_field('steps');
                         <div class="flex items-start justify-between gap-4 mb-10">
                             <div>
                                 <span class="flex items-center justify-center text-2xl font-semibold w-[38px] h-[38px] border-2 border-dashed border-[var(--brand-red)] rounded-full">
-                                    <?php echo $stepCount ?>
+                                    <?php echo $index + 1 ?>
                                 </span>
                             </div>
                             <div>
@@ -55,7 +54,6 @@ $steps = get_field('steps');
                         </div>
 
                     <?php
-                    $stepCount++;
                     endforeach; ?>
                 </div>
             <?php endif; ?>    

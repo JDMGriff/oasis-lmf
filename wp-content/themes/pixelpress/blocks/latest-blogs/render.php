@@ -36,14 +36,14 @@
                             <?php endif; ?>
 
                             <div class="text-xs text-white bg-[var(--brand-red)] rounded-full px-2 py-1 inline-block mt-4 font-semibold">
-                                <?php echo esc_html(get_the_date('F, Y')); ?>
+                                <?php echo get_the_date('F, Y'); ?>
                             </div>
 
                             <h5 class="text-xl font-semibold mt-3 mb-2"><?php the_title(); ?></h5>
                         </a>
 
                         <p class="mb-4">
-                            <?php echo esc_html(wp_trim_words(get_the_excerpt(), 25, '...')); ?>
+                            <?php echo wp_trim_words(get_the_excerpt(), 25, '...'); ?>
                         </p>
 
                         <a class="latest-blogs-rm mt-auto font-medium inline-block w-max pb-1 border-b border-[var(--brand-red)]" href="<?php the_permalink(); ?>">

@@ -5,7 +5,7 @@ $logos = get_field('logos');
 
 <section class="logo-scroller bg-white pb-10 pt-12">
     <?php if ($title): ?>
-        <h2 class="logo-scroller__title text-xl font-semibold"><?php echo esc_html($title); ?></h2>
+        <h2 class="logo-scroller__title text-xl font-semibold"><?php echo $title; ?></h2>
     <?php endif; ?>
 
     <?php if ($logos): ?>
