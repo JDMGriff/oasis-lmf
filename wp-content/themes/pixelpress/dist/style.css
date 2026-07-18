@@ -1284,6 +1284,9 @@ ul.nav-menu li.active a {
   .lg\:mb-0{
     margin-bottom: 0px;
   }
+  .lg\:h-\[800px\]{
+    height: 800px;
+  }
   .lg\:max-w-\[30\%\]{
     max-width: 30%;
   }

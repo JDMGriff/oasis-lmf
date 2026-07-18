@@ -2,11 +2,10 @@
 $heroTitle = get_field('hero_title');
 $heroCopy = get_field('hero_copy');
 $heroImage = get_field('hero_image');
-$usps = get_field('usps');
 $cta = get_field('cta');
 ?>
 
-<section class="hero-main py-10 lg:py-40 bg-cover bg-center lg:h-[800px]" style="<?php if ($heroImage) {?> background-image: url(<?php echo esc_url($heroImage['url']); ?>); <?php } ?>">
+<section class="hero-main py-10 lg:py-40 bg-cover bg-center" style="<?php if ($heroImage) {?> background-image: url(<?php echo esc_url($heroImage['url']); ?>); <?php } ?>">
     <div class="container">
         <div class="hero-inner">
             <div data-aos="fade-up" class="hero-content">
@@ -23,23 +22,6 @@ $cta = get_field('cta');
                         <?php echo wp_kses_post($heroCopy); ?>
                     </div>
                 <?php } ?>
-    
-                <!-- USPs -->
-                <?php if($usps): ?>
-                    <div class="hero-usp-wrap mb-6">
-                        <div class="hero-usp-row flex flex-row text-sm lg:text-base">
-                            <?php foreach($usps as $usp):
-                                $text = $usp['usp_text'];
-                            ?>
-    
-                            <div class="hero-usp-item flex min-w-0">
-                                <p class="text-white font-bold"><?php echo $text ?></p>
-                            </div>
-    
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
     
                 <!-- CTA -->
                 <?php if($cta) { ?>
