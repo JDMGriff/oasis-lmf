@@ -4,7 +4,7 @@ $imageTextBoxes = get_field('image_text_boxes');
 ?>
 
 <section
-    class="hero-main py-10 lg:py-40 bg-cover bg-center bg-[var(--off-white)]"
+    class="py-10 lg:py-40 bg-cover bg-center bg-[var(--off-white)]"
     style="
         background-image: url('<?php echo get_template_directory_uri() ?>/dist/images/logomark-corner-top-right.png');
         background-position: top right;
