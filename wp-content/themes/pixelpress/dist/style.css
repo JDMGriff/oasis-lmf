@@ -1048,6 +1048,19 @@ p.title-mark-red::before {
 .faq-item:not([open]) summary {
     background: white;
 }
+.faq-answer {
+    display: block;
+    height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: height 300ms ease, opacity 300ms ease;
+}
+.faq-item[open] .faq-answer {
+    opacity: 1;
+}
+.faq-answer-inner {
+    overflow: hidden;
+}
 .red-grad-bg-with-logomark {
     background: url('images/logomark-semi-circle.svg'), linear-gradient(90deg, rgba(212, 31, 41, 1) 0%, rgba(139, 33, 41, 1) 100%);
     background-position: center left;

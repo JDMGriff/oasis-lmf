@@ -17,7 +17,7 @@ $faqs = get_field('faqs');
                     $question = $faq['question'];
                     $answer = $faq['answer'];
                 ?>
-                    <details name="faqs" class="faq-item group mb-1 rounded-[4px]" <?php echo $index === 0 ? 'open' : ''; ?>>
+                    <details class="faq-item group mb-1 rounded-[4px]" <?php echo $index === 0 ? 'open' : ''; ?>>
                         <summary class="flex items-center justify-between gap-4 p-6 cursor-pointer list-none red-grad-bg rounded-md">
                             <span class="font-semibold text-[var(--off-black)] group-open:text-white text-2xl font-['Poppins',sans-serif]">
                                 <span class="text-base mr-2 text-[var(--brand-red)] group-open:text-white">
@@ -30,8 +30,10 @@ $faqs = get_field('faqs');
                             <span class="text-xl hidden group-open:inline text-white">−</span>
                         </summary>
 
-                        <div class="px-4 pb-4 text-lg mt-4 mb-6">
-                            <?php echo $answer; ?>
+                        <div class="faq-answer">
+                            <div class="faq-answer-inner px-4 pb-4 text-lg pt-4 mb-6">
+                                <?php echo $answer; ?>
+                            </div>
                         </div>
                     </details>
                 <?php endforeach; ?>

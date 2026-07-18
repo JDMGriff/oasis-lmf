@@ -1,10 +1,11 @@
 <?php
 $mainTitle = get_field('main_title');
 $imageTextBoxes = get_field('image_text_boxes');
+$greyBg = get_field('show_grey_background');
 ?>
 
 <section
-    class="py-10 lg:py-40 bg-cover bg-center bg-[var(--off-white)]"
+    class="py-10 lg:py-40 bg-cover bg-center <?php if($greyBg  === true): ?> bg-[var(--off-white)] <?php endif; ?>"
     style="
         background-image: url('<?php echo get_template_directory_uri() ?>/dist/images/logomark-corner-top-right.png');
         background-position: top right;
@@ -16,6 +17,7 @@ $imageTextBoxes = get_field('image_text_boxes');
         <h3 class="title-mark mb-10"><?php echo $mainTitle ?></h3>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <?php if($imageTextBoxes): ?>
             <?php foreach($imageTextBoxes as $index => $box):
                 $boxTitle = $box['box_title'];
                 $boxCopy = $box['box_copy'];
@@ -57,25 +59,26 @@ $imageTextBoxes = get_field('image_text_boxes');
                         <h4 class="uppercase text-3xl font-bold mb-6">
                             <?php echo $boxTitle ?>
                         </h4>
-
-                        <?php echo $boxCopy ?>
-                        
+                        <?php if($boxCopy):
+                            echo $boxCopy;
+                        endif; ?>
                         <?php if($boxListItems):?>
                             <ul class="text-white mt-4 mb-8 leading-loose">
-                                <?php foreach($boxListItems as $listItem):
-                                    $item = $listItem['list_item']
-                                ?>
-                                    <li>✓ <?php echo $item ?></li>
+                                <?php foreach($boxListItems as $listItem): ?>
+                                    <li>✓ <?php echo $listItem['list_item'] ?></li>
                                 <?php endforeach ?>
                             </ul>
                         <?php endif; ?>
     
-                        <a class="primary-cta" href="<?php echo $boxLink['url'] ?>">
-                            <?php echo $boxLink['title'] ?>
-                        </a>
+                        <?php if($boxLink): ?>
+                            <a class="primary-cta" href="<?php echo $boxLink['url'] ?>">
+                                <?php echo $boxLink['title'] ?>
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </div>
 </section>

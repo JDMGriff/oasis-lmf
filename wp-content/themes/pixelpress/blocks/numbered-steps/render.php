@@ -2,17 +2,20 @@
 $blockTitle = get_field('block_title');
 $blockCopy = get_field('block_copy');
 $steps = get_field('steps');
-$stepTotal     = is_array($steps) ? count($steps) : 0;
+$stepTotal = is_array($steps) ? count($steps) : 0;
+$showLogomark = get_field('show_logomark');
 ?>
 
 <section
     class="hero-main py-10 lg:py-40 bg-cover bg-center bg-[var(--off-white)]"
+    <?php if($showLogomark === true): ?>
     style="
         background-image: url('<?php echo get_template_directory_uri() ?>/dist/images/logomark-corner-top-right.png');
         background-position: top right;
         background-size: auto;
         background-repeat: no-repeat;
     "
+    <?php endif; ?>
 >
     <div class="container px-4 mx-auto">
         <div class="grid gap-32 grid-cols-1 lg:grid-cols-2">
@@ -37,7 +40,7 @@ $stepTotal     = is_array($steps) ? count($steps) : 0;
                         $stepCopy = $step['step_copy'];
                     ?>
 
-                        <div class="flex items-start justify-between gap-4 mb-10">
+                        <div class="flex items-start gap-4 mb-10">
                             <div>
                                 <span class="flex items-center justify-center text-2xl font-semibold w-[38px] h-[38px] border-2 border-dashed border-[var(--brand-red)] rounded-full">
                                     <?php echo $index + 1 ?>

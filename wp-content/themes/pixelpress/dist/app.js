@@ -198,6 +198,37 @@ aos__WEBPACK_IMPORTED_MODULE_2___default().init({
   once: true,
   offset: 80,
 });
+
+// FAQ accordion
+document.querySelectorAll('.faq-item').forEach((faq) => {
+  const summary = faq.querySelector('summary');
+  const answer = faq.querySelector('.faq-answer');
+
+  if (faq.open) answer.style.height = 'auto';
+
+  summary.addEventListener('click', (event) => {
+    event.preventDefault();
+
+    document.querySelectorAll('.faq-item[open]').forEach((openFaq) => {
+      if (openFaq !== faq) {
+        openFaq.open = false;
+        openFaq.querySelector('.faq-answer').style.height = '0';
+      }
+    });
+
+    if (faq.open) {
+      answer.style.height = `${answer.scrollHeight}px`;
+      requestAnimationFrame(() => answer.style.height = '0');
+      setTimeout(() => faq.open = false, 300);
+    } else {
+      faq.open = true;
+      answer.style.height = '0';
+      requestAnimationFrame(() => answer.style.height = `${answer.scrollHeight}px`);
+      setTimeout(() => answer.style.height = 'auto', 300);
+    }
+  });
+});
+
 })();
 
 /******/ })()
