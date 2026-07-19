@@ -43,8 +43,12 @@
                                 <?php echo $date; ?>
                             </div>                        
                         </div>
-
-                        <h5 class="text-xl font-semibold mt-3 mb-2"><?php echo get_the_title($caseStudyId); ?></h5>
+                        
+                        <a href="<?php echo get_permalink($caseStudyId); ?>">
+                            <h5 class="text-xl font-semibold mt-3 mb-2">
+                                <?php echo get_the_title($caseStudyId); ?>
+                            </h5>
+                        </a>
 
                         <p class="mb-4">
                             <?php echo wp_trim_words(get_the_excerpt($caseStudyId), 25, '...'); ?>
