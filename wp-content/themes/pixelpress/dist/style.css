@@ -555,23 +555,20 @@ video {
 .mt-12{
   margin-top: 3rem;
 }
+.mt-20{
+  margin-top: 5rem;
+}
 .mt-3{
   margin-top: 0.75rem;
 }
 .mt-4{
   margin-top: 1rem;
 }
-.mt-auto{
-  margin-top: auto;
-}
-.mt-2{
-  margin-top: 0.5rem;
-}
 .mt-6{
   margin-top: 1.5rem;
 }
-.mt-20{
-  margin-top: 5rem;
+.mt-auto{
+  margin-top: auto;
 }
 .block{
   display: block;
@@ -628,6 +625,9 @@ video {
 .max-w-\[30px\]{
   max-width: 30px;
 }
+.flex-shrink-0{
+  flex-shrink: 0;
+}
 .shrink-0{
   flex-shrink: 0;
 }
@@ -676,6 +676,9 @@ video {
 .gap-3{
   gap: 0.75rem;
 }
+.gap-32{
+  gap: 8rem;
+}
 .gap-4{
   gap: 1rem;
 }
@@ -719,8 +722,14 @@ video {
 .border-b{
   border-bottom-width: 1px;
 }
+.border-t{
+  border-top-width: 1px;
+}
 .border-dashed{
   border-style: dashed;
+}
+.border-\[\#707070\/25\]{
+  border-color: #707070/25;
 }
 .border-\[\#999\]{
   --tw-border-opacity: 1;
@@ -801,6 +810,10 @@ video {
 .px-4{
   padding-left: 1rem;
   padding-right: 1rem;
+}
+.px-6{
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
 }
 .py-1{
   padding-top: 0.25rem;
@@ -1094,7 +1107,6 @@ p.title-mark-red::before {
     width: calc(100% - 32px);
     max-width: 1400px;
     margin: 0 auto;
-    padding: 16px 0;
 }
 .red-grad-bg {
     background: linear-gradient(90deg, rgba(212, 31, 41, 1) 0%, rgba(139, 33, 41, 1) 100%);
@@ -1496,41 +1508,38 @@ ul.nav-menu li.active a {
     left: 0;
     width: 100%;
     height: 100%;
-} 
-
+}
+/* Contact Block links */
+.contact-information a {
+    color: var(--brand-red);
+    text-decoration: underline;
+}
 .hover\:-translate-y-2:hover{
   --tw-translate-y: -0.5rem;
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
-} 
-
+}
 .hover\:shadow-md:hover{
   --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
-} 
-
+}
 .group[open] .group-open\:inline{
   display: inline;
-} 
-
+}
 .group[open] .group-open\:hidden{
   display: none;
-} 
-
+}
 .group[open] .group-open\:text-white{
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity, 1));
-} 
-
+}
 .group[open] .group-open\:opacity-100{
   opacity: 1;
-} 
-
+}
 .group:hover .group-hover\:translate-x-2{
   --tw-translate-x: 0.5rem;
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
-} 
-
+}
 @media (min-width: 768px){
   .md\:my-0{
     margin-top: 0px;
@@ -1578,8 +1587,7 @@ ul.nav-menu li.active a {
   .md\:text-\[60px\]{
     font-size: 60px;
   }
-} 
-
+}
 @media (min-width: 1024px){
   .lg\:col-span-2{
     grid-column: span 2 / span 2;
@@ -1634,8 +1642,7 @@ ul.nav-menu li.active a {
     font-size: 1rem;
     line-height: 1.5rem;
   }
-} 
-
+}
 @media (min-width: 1280px){
   .xl\:max-w-\[70\%\]{
     max-width: 70%;
@@ -1644,4 +1651,3 @@ ul.nav-menu li.active a {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
-
