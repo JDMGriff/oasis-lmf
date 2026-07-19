@@ -613,6 +613,9 @@ video {
 .max-w-\[275px\]{
   max-width: 275px;
 }
+.max-w-\[30px\]{
+  max-width: 30px;
+}
 .shrink-0{
   flex-shrink: 0;
 }
@@ -1516,6 +1519,9 @@ ul.nav-menu li.active a {
   }
   .lg\:max-w-\[70\%\]{
     max-width: 70%;
+  }
+  .lg\:max-w-\[80\%\]{
+    max-width: 80%;
   }
   .lg\:grid-cols-2{
     grid-template-columns: repeat(2, minmax(0, 1fr));
