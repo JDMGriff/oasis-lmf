@@ -1,0 +1,27 @@
+{
+    "$schema": "https://raw.githubusercontent.com/AdvancedCustomFields/schemas/refs/heads/main/json/block.json",
+    "apiVersion": 3,   
+    "name": "pixelpress/overview-text-with-steps",
+    "title": "Overview Text with Steps",
+    "description": "Title left, text right with tiled steps below.",
+    "category": "pixelpress-components",
+    "icon": "cover-image",
+    "keywords": [
+        "hero",
+        "banner"
+    ],
+    "acf": {
+        "blockVersion": 3,
+        "renderTemplate": "render.php",
+        "hideFieldsInSidebar": true,
+        "expandedEditorButtonText": "Edit Overview Text with Steps",
+        "expandedEditorButtons": {
+            "sidebar": false,
+            "toolbar": true
+        }
+    },
+    "supports": {
+        "align": false,
+        "customClassName": false        
+    }
+}

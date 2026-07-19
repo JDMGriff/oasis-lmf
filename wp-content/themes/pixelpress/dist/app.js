@@ -33,18 +33,30 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   mobileMenu: () => (/* binding */ mobileMenu)
 /* harmony export */ });
 const mobileMenu = () => {
-    const elements = {
-        trigger: document.querySelector('.mobile-tav-trigger'),
-        menu: document.querySelector('.theme-main-menu'),
-        body: document.querySelector('body')
+    const trigger = document.querySelector('.mobile-nav-trigger');
+    const menu = document.querySelector('.theme-main-menu');
+
+    if (!trigger || !menu) return;
+
+    const setMenuState = (isOpen) => {
+        menu.classList.toggle('open', isOpen);
+        trigger.classList.toggle('open', isOpen);
+        trigger.setAttribute('aria-expanded', isOpen);
+        trigger.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+        document.body.classList.toggle('mobile-menu-open', isOpen);
     };
 
-    const toggleMenu = () => {
-        elements.menu.classList.toggle('open');
-        elements.body.style.position = elements.body.style.position === 'fixed' ? '' : 'fixed';
-    };
+    trigger.addEventListener('click', () => {
+        setMenuState(!menu.classList.contains('open'));
+    });
 
-    elements.trigger.addEventListener('click', toggleMenu);
+    menu.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', () => setMenuState(false));
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') setMenuState(false);
+    });
 };
 
 

@@ -12,7 +12,7 @@
 $logo = get_field('logo', 'option');
 ?>
 
-<header class="bg-[var(--brand-red)]">
+<header class="relative z-50 bg-[var(--brand-red)]">
     <div class="container">
         <div class="flex items-center justify-between">
             <a href="<?php echo home_url() ?>">
@@ -20,7 +20,7 @@ $logo = get_field('logo', 'option');
             </a>
     
             <!-- Nav menu -->
-            <div class="theme-main-menu">
+            <div id="mobile-menu" class="theme-main-menu">
             <?php
                 wp_nav_menu( array( 
                     'theme_location' => 'header-menu',
@@ -31,11 +31,11 @@ $logo = get_field('logo', 'option');
             ?>
             </div>
             <!-- Mobile Nav Menu Trigger -->
-            <div class="mobile-tav-trigger md:hidden">
-                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="19" viewBox="0 0 26 19">
-                    <path id="Union_54" data-name="Union 54" d="M0,19V16H26v3Zm6.933-8V8H26v3ZM0,3V0H26V3Z" fill="#0f0f10"/>
-                </svg>
-            </div>         
+            <button class="mobile-nav-trigger md:hidden" type="button" aria-controls="mobile-menu" aria-expanded="false" aria-label="Open menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
     
         </div>
     </div>
