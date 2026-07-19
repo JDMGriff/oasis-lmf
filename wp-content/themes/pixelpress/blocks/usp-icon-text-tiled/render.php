@@ -2,6 +2,7 @@
 $title = get_field('main_title');
 $blockCopy = get_field('block_copy');
 $uspItems = get_field('usp_items');
+$lowerBlockCopy = get_field('lower_block_copy')
 ?>
 
 <section class="usp-icon-text-block red-grad-bg-with-logomark py-10 lg:py-40 bg-cover bg-center bg-[var(--off-white)]">
@@ -43,6 +44,12 @@ $uspItems = get_field('usp_items');
                         </div>
                     </div>
                 <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if($lowerBlockCopy): ?>
+            <div class="text-white/70 text-lg mb-6">
+                <?php echo $lowerBlockCopy ?>
             </div>
         <?php endif; ?>
     </div>
