@@ -564,6 +564,15 @@ video {
 .mt-auto{
   margin-top: auto;
 }
+.mt-2{
+  margin-top: 0.5rem;
+}
+.mt-6{
+  margin-top: 1.5rem;
+}
+.mt-20{
+  margin-top: 5rem;
+}
 .block{
   display: block;
 }
@@ -1442,6 +1451,11 @@ ul.nav-menu li.active a {
     transition: all .2s ease-in-out;
     position: relative;
     top: -1px;
+}
+.member-bio {
+    max-height: 120px;
+    overflow: hidden;
+    transition: max-height 350ms ease-in-out;
 }
 .text-rm:hover::after {
     transform: translateX(4px);

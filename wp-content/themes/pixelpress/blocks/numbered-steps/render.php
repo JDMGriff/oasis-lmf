@@ -4,10 +4,11 @@ $blockCopy = get_field('block_copy');
 $steps = get_field('steps');
 $stepTotal = is_array($steps) ? count($steps) : 0;
 $showLogomark = get_field('show_logomark');
+$whiteBg = get_field('white_background');
 ?>
 
 <section
-    class="hero-main py-10 lg:py-40 bg-cover bg-center bg-[var(--off-white)]"
+    class="hero-main py-10 lg:py-40 bg-cover bg-center <?php echo $whiteBg === true ? 'bg-white' : 'bg-[var(--off-white)]' ?>"
     <?php if($showLogomark === true): ?>
     style="
         background-image: url('<?php echo get_template_directory_uri() ?>/dist/images/logomark-corner-top-right.png');
@@ -25,9 +26,9 @@ $showLogomark = get_field('show_logomark');
                         <?php echo $blockTitle ?>
                     </h3>
                     <?php if($blockCopy): ?>
-                        <p class="text-xl">
+                        <span class="text-xl">
                             <?php echo $blockCopy ?>
-                        </p>
+                        </span>
                     <?php endif; ?>
                 </div>
             <?php endif; ?>

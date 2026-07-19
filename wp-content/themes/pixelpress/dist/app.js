@@ -241,6 +241,28 @@ document.querySelectorAll('.faq-item').forEach((faq) => {
   });
 });
 
+// Board member bios
+document.querySelectorAll('.member-bio').forEach((bio) => {
+  const trigger = document.querySelector(`[aria-controls="${bio.id}"]`);
+  const collapsedHeight = 120;
+
+  if (!trigger) return;
+
+  if (bio.scrollHeight <= collapsedHeight) {
+    bio.style.maxHeight = 'none';
+    trigger.hidden = true;
+    return;
+  }
+
+  trigger.addEventListener('click', () => {
+    const isOpen = trigger.getAttribute('aria-expanded') === 'true';
+
+    trigger.setAttribute('aria-expanded', !isOpen);
+    trigger.textContent = isOpen ? 'Read More' : 'Read Less';
+    bio.style.maxHeight = isOpen ? `${collapsedHeight}px` : `${bio.scrollHeight}px`;
+  });
+});
+
 })();
 
 /******/ })()
