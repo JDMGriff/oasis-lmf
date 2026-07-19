@@ -1,8 +1,10 @@
 <?php
-    $blockTitle    = get_field('block_title');
+    $blockTitle = get_field('block_title');
     $blockEyebrow = get_field('block_eyebrow_sub_title');
-    $steps         = get_field('steps');
-    $stepTotal     = is_array($steps) ? count($steps) : 0;
+    $steps = get_field('steps');
+    $stepTotal = is_array($steps) ? count($steps) : 0;
+    $blockIntro = get_field('block_intro');
+    $lowerCopy = get_field('lower_copy');
 ?>
 
 <section class="red-grad-bg-with-logomark py-10 lg:py-40">
@@ -18,14 +20,20 @@
                         </p>
                     <?php endif; ?>
 
-                    <h3 class="text-white">
+                    <h3 class="text-white <?php if (!$blockEyebrow): echo 'title-mark-white'; endif; ?>">
                         <?php echo $blockTitle; ?>
                     </h3>
                 </div>
             <?php endif; ?>
 
+            <?php if($blockIntro): ?>
+                <div class="col-span-2 mb-6 text-white">
+                    <?php echo $blockIntro ?>
+                </div>
+            <?php endif; ?>
+
             <!-- Leave the top-right cell empty when there are four steps -->
-            <?php if ($stepTotal === 4): ?>
+            <?php if ($stepTotal === 4 && !$blockIntro): ?>
                 <div class="hidden lg:block" aria-hidden="true"></div>
             <?php endif; ?>
 
@@ -57,6 +65,11 @@
                 <?php endforeach; ?>
             <?php endif; ?>
 
+            <?php if($lowerCopy): ?>
+                <div class="col-span-2 mb-6 text-white">
+                    <?php echo $lowerCopy ?>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </section>
