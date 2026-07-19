@@ -1,0 +1,27 @@
+{
+    "$schema": "https://raw.githubusercontent.com/AdvancedCustomFields/schemas/refs/heads/main/json/block.json",
+    "apiVersion": 3,   
+    "name": "pixelpress/usp-icon-text-tiled",
+    "title": "USP Icon & Text Tiled",
+    "description": "Repeatable icon and text block for USPs laid out in 2 cols 2 rows",
+    "category": "pixelpress-components",
+    "icon": "cover-image",
+    "keywords": [
+        "hero",
+        "banner"
+    ],
+    "acf": {
+        "blockVersion": 3,
+        "renderTemplate": "render.php",
+        "hideFieldsInSidebar": true,
+        "expandedEditorButtonText": "Edit USP Icon & Text Tiled",
+        "expandedEditorButtons": {
+            "sidebar": false,
+            "toolbar": true
+        }
+    },
+    "supports": {
+        "align": false,
+        "customClassName": false        
+    }
+}
