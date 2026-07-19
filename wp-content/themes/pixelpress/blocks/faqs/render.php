@@ -18,16 +18,18 @@ $faqs = get_field('faqs');
                     $answer = $faq['answer'];
                 ?>
                     <details class="faq-item group mb-1 rounded-[4px]" <?php echo $index === 0 ? 'open' : ''; ?>>
-                        <summary class="flex items-center justify-between gap-4 p-6 cursor-pointer list-none red-grad-bg rounded-md">
-                            <span class="font-semibold text-[var(--off-black)] group-open:text-white text-2xl font-['Poppins',sans-serif]">
-                                <span class="text-base mr-2 text-[var(--brand-red)] group-open:text-white">
+                        <summary class="relative flex items-center justify-between gap-4 p-6 cursor-pointer list-none bg-white rounded-md overflow-hidden">
+                            <span class="absolute inset-0 red-grad-bg opacity-0 group-open:opacity-100 transition-opacity duration-300 ease-in-out"></span>
+
+                            <span class="relative font-semibold text-[var(--off-black)] group-open:text-white text-2xl font-['Poppins',sans-serif] transition-colors duration-300 ease-in-out">
+                                <span class="text-base mr-2 text-[var(--brand-red)] group-open:text-white transition-colors duration-300 ease-in-out">
                                     <?php echo str_pad($index + 1, 2, '0', STR_PAD_LEFT); ?>
                                 </span>
                                 <?php echo $question; ?>
                             </span>
 
-                            <span class="text-xl group-open:hidden text-[var(--off-black)]">+</span>
-                            <span class="text-xl hidden group-open:inline text-white">−</span>
+                            <span class="relative text-xl group-open:hidden text-[var(--off-black)]">+</span>
+                            <span class="relative text-xl hidden group-open:inline text-white">−</span>
                         </summary>
 
                         <div class="faq-answer">
