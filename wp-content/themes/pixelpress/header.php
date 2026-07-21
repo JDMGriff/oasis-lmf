@@ -12,7 +12,7 @@
 $logo = get_field('logo', 'option');
 ?>
 
-<header class="relative z-50 bg-[var(--brand-red)]">
+<header class="relative z-50 bg-[var(--brand-red)] py-6">
     <div class="container">
         <div class="flex items-center justify-between">
             <a href="<?php echo home_url() ?>">

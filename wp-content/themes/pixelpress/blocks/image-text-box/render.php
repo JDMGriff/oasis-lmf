@@ -5,7 +5,7 @@ $greyBg = get_field('show_grey_background');
 ?>
 
 <section
-    class="py-10 lg:py-40 bg-cover bg-center <?php if($greyBg  === true): ?> bg-[var(--off-white)] <?php endif; ?>"
+    class="py-10 lg:py-40 bg-cover bg-center <?php if($greyBg === true): ?> bg-[var(--off-white)] <?php endif; ?>"
     style="
         background-image: url('<?php echo get_template_directory_uri() ?>/dist/images/logomark-corner-top-right.png');
         background-position: top right;
