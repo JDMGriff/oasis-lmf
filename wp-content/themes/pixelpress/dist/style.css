@@ -1676,7 +1676,4 @@ ul.nav-menu li.active a {
   .xl\:max-w-\[70\%\]{
     max-width: 70%;
   }
-  .xl\:grid-cols-4{
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
 }
