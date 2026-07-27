@@ -525,14 +525,23 @@ video {
 .mb-10{
   margin-bottom: 2.5rem;
 }
+.mb-12{
+  margin-bottom: 3rem;
+}
 .mb-2{
   margin-bottom: 0.5rem;
+}
+.mb-20{
+  margin-bottom: 5rem;
 }
 .mb-3{
   margin-bottom: 0.75rem;
 }
 .mb-4{
   margin-bottom: 1rem;
+}
+.mb-5{
+  margin-bottom: 1.25rem;
 }
 .mb-6{
   margin-bottom: 1.5rem;
@@ -590,6 +599,9 @@ video {
 }
 .aspect-square{
   aspect-ratio: 1 / 1;
+}
+.aspect-video{
+  aspect-ratio: 16 / 9;
 }
 .h-\[350px\]{
   height: 350px;
@@ -830,10 +842,6 @@ video {
   padding-top: 3rem;
   padding-bottom: 3rem;
 }
-.py-14{
-  padding-top: 3.5rem;
-  padding-bottom: 3.5rem;
-}
 .py-20{
   padding-top: 5rem;
   padding-bottom: 5rem;
@@ -849,6 +857,10 @@ video {
 .py-6{
   padding-top: 1.5rem;
   padding-bottom: 1.5rem;
+}
+.py-14{
+  padding-top: 3.5rem;
+  padding-bottom: 3.5rem;
 }
 .pb-1{
   padding-bottom: 0.25rem;
@@ -1029,11 +1041,13 @@ h2 {
 h3 {
     font-size: 40px;
     text-transform: uppercase;
-    font-weight: bold;
+}
+.title-mark {
     padding-left: 14px;
+    font-weight: bold;
     position: relative;
 }
-h3.title-mark::before {
+.title-mark::before {
     content: "";
     display: inline-block;
     width: 16px;
@@ -1046,7 +1060,7 @@ h3.title-mark::before {
     left: 0;
     top: 0;
 }
-h3.title-mark-white::before {
+.title-mark-white::before {
     content: "";
     display: inline-block;
     width: 16px;
@@ -1057,7 +1071,7 @@ h3.title-mark-white::before {
     background-size: contain;
     position: absolute;
     left: 0;
-    top: 0;
+    top: 0; 
 }
 h4 {
     font-size: 24px;
@@ -1521,6 +1535,9 @@ ul.nav-menu li.active a {
     color: var(--brand-red);
     text-decoration: underline;
 }
+.last\:mb-0:last-child{
+  margin-bottom: 0px;
+}
 .hover\:-translate-y-2:hover{
   --tw-translate-y: -0.5rem;
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
@@ -1546,6 +1563,11 @@ ul.nav-menu li.active a {
 .group:hover .group-hover\:translate-x-2{
   --tw-translate-x: 0.5rem;
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+@media (min-width: 640px){
+  .sm\:grid-cols-2{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 @media (min-width: 768px){
   .md\:my-0{
