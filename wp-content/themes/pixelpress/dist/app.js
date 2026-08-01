@@ -263,6 +263,52 @@ document.querySelectorAll('.member-bio').forEach((bio) => {
   });
 });
 
+// News load more
+const loadMoreNews = document.querySelector('#load-more-news');
+
+if (loadMoreNews) {
+  loadMoreNews.addEventListener('click', async () => {
+    const nextPage = Number(loadMoreNews.dataset.page) + 1;
+
+    loadMoreNews.disabled = true;
+    loadMoreNews.textContent = 'Loading...';
+
+    const formData = new FormData();
+    formData.append('action', 'pixelpress_load_more_posts');
+    formData.append('nonce', pixelpressAjax.nonce);
+    formData.append('page', nextPage);
+
+    try {
+      const response = await fetch(pixelpressAjax.url, {
+        method: 'POST',
+        body: formData,
+      });
+      const result = await response.json();
+
+      if (!result.success) {
+        loadMoreNews.disabled = false;
+        loadMoreNews.textContent = 'Load More';
+        return;
+      }
+
+      document.querySelector('#news-listing-grid').insertAdjacentHTML('beforeend', result.data.html);
+      loadMoreNews.dataset.page = nextPage;
+
+      if (!result.data.has_more) {
+        loadMoreNews.remove();
+      } else {
+        loadMoreNews.disabled = false;
+        loadMoreNews.textContent = 'Load More';
+      }
+
+      aos__WEBPACK_IMPORTED_MODULE_2___default().refresh();
+    } catch (error) {
+      loadMoreNews.disabled = false;
+      loadMoreNews.textContent = 'Load More';
+    }
+  });
+}
+
 })();
 
 /******/ })()
