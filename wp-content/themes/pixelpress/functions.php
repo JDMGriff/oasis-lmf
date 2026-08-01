@@ -37,8 +37,65 @@ function wpdocs_theme_name_scripts() {
         filemtime(get_template_directory() . '/dist/app.js'),
         true
     );
+    wp_localize_script('pixelpress-app', 'pixelpressAjax', array(
+        'url'   => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('pixelpress_load_more'),
+    ));
 }
 add_action( 'wp_enqueue_scripts', 'wpdocs_theme_name_scripts' );
+
+function pixelpress_load_more_posts() {
+    check_ajax_referer('pixelpress_load_more', 'nonce');
+
+    $page = isset($_POST['page']) ? intval($_POST['page']) : 2;
+    $posts = new WP_Query(array(
+        'post_type'      => 'post',
+        'posts_per_page' => 8,
+        'post_status'    => 'publish',
+        'paged'          => $page,
+    ));
+
+    ob_start();
+
+    while($posts->have_posts()) {
+        $posts->the_post();
+        ?>
+        <article class="flex flex-col h-full">
+            <a href="<?php the_permalink(); ?>">
+                <?php if(has_post_thumbnail()): ?>
+                    <?php the_post_thumbnail('full'); ?>
+                <?php endif; ?>
+
+                <div class="text-xs text-white bg-[var(--brand-red)] rounded-full px-2 py-1 inline-block mt-4 font-semibold">
+                    <?php echo get_the_date('F, Y'); ?>
+                </div>
+
+                <h5 class="text-xl font-semibold mt-3 mb-2"><?php the_title(); ?></h5>
+            </a>
+
+            <p class="mb-4">
+                <?php echo wp_trim_words(get_the_excerpt(), 25, '...'); ?>
+            </p>
+
+            <a class="latest-blogs-rm mt-auto font-medium inline-block w-max pb-1 border-b border-[var(--brand-red)]" href="<?php the_permalink(); ?>">
+                Read More
+            </a>
+        </article>
+        <?php
+    }
+
+    $html = ob_get_clean();
+    $hasMore = $page < $posts->max_num_pages;
+
+    wp_reset_postdata();
+
+    wp_send_json_success(array(
+        'html'     => $html,
+        'has_more' => $hasMore,
+    ));
+}
+add_action('wp_ajax_pixelpress_load_more_posts', 'pixelpress_load_more_posts');
+add_action('wp_ajax_nopriv_pixelpress_load_more_posts', 'pixelpress_load_more_posts');
 
 // Add tailwind classes to active menu item
 add_filter('nav_menu_css_class' , 'tailwind_active_menu_item' , 10 , 2);
