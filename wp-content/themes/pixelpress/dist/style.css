@@ -726,6 +726,9 @@ video {
 .gap-8{
   gap: 2rem;
 }
+.gap-10{
+  gap: 2.5rem;
+}
 .gap-x-6{
   -moz-column-gap: 1.5rem;
        column-gap: 1.5rem;
@@ -914,6 +917,9 @@ video {
 }
 .pt-4{
   padding-top: 1rem;
+}
+.pt-5{
+  padding-top: 1.25rem;
 }
 .text-center{
   text-align: center;
@@ -1760,6 +1766,12 @@ ul.nav-menu li.active a {
 }
 
 @media (min-width: 1024px){
+  .lg\:sticky{
+    position: sticky;
+  }
+  .lg\:top-8{
+    top: 2rem;
+  }
   .lg\:col-span-2{
     grid-column: span 2 / span 2;
   }
@@ -1799,6 +1811,9 @@ ul.nav-menu li.active a {
   .lg\:grid-cols-4{
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+  .lg\:grid-cols-\[minmax\(0\2c 1fr\)_320px\]{
+    grid-template-columns: minmax(0,1fr) 320px;
+  }
   .lg\:flex-row{
     flex-direction: row;
   }
@@ -1807,6 +1822,9 @@ ul.nav-menu li.active a {
   }
   .lg\:gap-32{
     gap: 8rem;
+  }
+  .lg\:gap-16{
+    gap: 4rem;
   }
   .lg\:p-8{
     padding: 2rem;

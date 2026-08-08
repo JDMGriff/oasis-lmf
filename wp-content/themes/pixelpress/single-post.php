@@ -11,7 +11,7 @@
         <header class="bg-[var(--off-white)] py-16 lg:py-24">
             <div class="container mx-auto px-4">
                 <div class="w-full max-w-[960px] mx-auto">
-                    <a class="text-rm inline-block text-[var(--brand-red)] font-semibold mb-8" href="/news/">
+                    <a class="text-rm inline-block text-[var(--brand-red)] font-semibold mb-8" href="/news-events/">
                         Back to news
                     </a>
 

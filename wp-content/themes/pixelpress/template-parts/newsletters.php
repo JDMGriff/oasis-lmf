@@ -30,16 +30,19 @@ $subscribeCta = get_field('newsletter_cta');
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <?php while($newsletters->have_posts()):
                     $newsletters->the_post();
+                    $newsletterUpload = get_field('newsletter_upload');
                 ?>
-                    <a class="group flex items-center gap-5 bg-white rounded-[4px] p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-md" href="<?php the_permalink(); ?>">
-                        <img class="w-6 h-6" src="<?php echo get_template_directory_uri(); ?>/dist/images/newsletter-icon.svg" alt="">
+                    <?php if($newsletterUpload): ?>
+                        <a class="group flex items-center gap-5 bg-white rounded-[4px] p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-md" href="<?php echo $newsletterUpload['url']; ?>" download="<?php echo $newsletterUpload['filename']; ?>">
+                            <img class="w-6 h-6" src="<?php echo get_template_directory_uri(); ?>/dist/images/newsletter-icon.svg" alt="">
 
-                        <h5 class="text-lg font-semibold">
-                            <?php the_title(); ?>
-                        </h5>
+                            <h5 class="text-lg font-semibold">
+                                <?php the_title(); ?>
+                            </h5>
 
-                        <span class="ml-auto text-[var(--brand-red)] transition-transform duration-200 group-hover:translate-x-1">&rarr;</span>
-                    </a>
+                            <span class="ml-auto text-[var(--brand-red)] transition-transform duration-200 group-hover:translate-x-1">&rarr;</span>
+                        </a>
+                    <?php endif; ?>
                 <?php endwhile; ?>
             </div>
         </div>
