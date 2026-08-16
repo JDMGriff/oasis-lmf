@@ -21,7 +21,7 @@ $bgImage = get_field('background_image');
             <?php endif; ?>
 
             <?php if($copy): ?>
-            <div class="text-white text-xl my-6">
+            <div class="text-white text-lg my-6">
                 <?php echo $copy ?>
             </div>
             <?php endif; ?>
@@ -31,7 +31,7 @@ $bgImage = get_field('background_image');
                     <?php foreach($usps as $usp):
                         $item = $usp['item'];    
                     ?>
-                        <p class="text-white text-xl">
+                        <p class="text-white text-lg">
                             <?php echo $item ?>
                         </p>
                     <?php endforeach; ?>

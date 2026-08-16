@@ -19,7 +19,7 @@ $pageLinks = get_field('inner_links');
     
                 <!-- Hero Copy -->
                 <?php if ($heroCopy) { ?>
-                    <div class="hero-copy text-white text-center mb-6 text-[clamp(16px,2vw,24px)] leading-[1.4] font-medium md:text-left">
+                    <div class="hero-copy w-full lg:max-w-[65%] text-white text-center mb-6 text-[clamp(16px,2vw,20px)] leading-[1.4] font-medium md:text-left">
                         <?php echo wp_kses_post($heroCopy); ?>
                     </div>
                 <?php } ?>

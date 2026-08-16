@@ -55,20 +55,22 @@ $greyBg = get_field('show_grey_background');
                     </div>
 
                     <!-- Box Content -->
-                    <div class="relative z-[5] text-white">
+                    <div class="relative z-[5] text-white h-full flex flex-col justify-between">
                         <h4 class="uppercase text-3xl font-bold mb-6">
                             <?php echo $boxTitle ?>
                         </h4>
-                        <?php if($boxCopy):
-                            echo $boxCopy;
-                        endif; ?>
-                        <?php if($boxListItems):?>
-                            <ul class="text-white mt-4 mb-8 leading-loose">
-                                <?php foreach($boxListItems as $listItem): ?>
-                                    <li>✓ <?php echo $listItem['list_item'] ?></li>
-                                <?php endforeach ?>
-                            </ul>
-                        <?php endif; ?>
+                        <div>
+                            <?php if($boxCopy):
+                                echo $boxCopy;
+                            endif; ?>
+                            <?php if($boxListItems):?>
+                                <ul class="text-white mt-4 mb-8 leading-loose">
+                                    <?php foreach($boxListItems as $listItem): ?>
+                                        <li>✓ <?php echo $listItem['list_item'] ?></li>
+                                    <?php endforeach ?>
+                                </ul>
+                            <?php endif; ?>
+                        </div>
     
                         <?php if($boxLink): ?>
                             <a class="primary-cta" href="<?php echo $boxLink['url'] ?>">
