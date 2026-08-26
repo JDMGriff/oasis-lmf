@@ -67,7 +67,8 @@ $getModelFallbackImage = static function ($perils) {
 
             <?php if($latestUpdates):
                 $title = $latestUpdates['title'];
-                $models = array_slice($latestUpdates['model_updates'] ?? [], 0, 2);
+                $modelUpdates = $latestUpdates['model_updates'] ?? [];
+                $models = is_array($modelUpdates) ? array_slice($modelUpdates, 0, 2) : [];
             ?>
                 <div class="w-full lg:max-w-[70%]">
                     <h3 class="title-mark mb-8">
