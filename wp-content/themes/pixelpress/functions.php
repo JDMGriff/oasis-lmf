@@ -107,6 +107,64 @@ function tailwind_active_menu_item ($classes, $item) {
   return $classes;
 }
 
+/**
+ * Keep the primary navigation concise: the logo is the home link and About Us
+ * should always be a top-level destination, even if the saved menu nests it.
+ */
+function pixelpress_primary_menu_structure($items, $args) {
+    if (($args->theme_location ?? '') !== 'header-menu') {
+        return $items;
+    }
+
+    $homeUrl = untrailingslashit(home_url('/'));
+
+    foreach ($items as $key => $item) {
+        $itemUrl = untrailingslashit((string) $item->url);
+        $title = strtolower(trim(wp_strip_all_tags($item->title)));
+
+        if ($title === 'home' || $itemUrl === $homeUrl) {
+            unset($items[$key]);
+            continue;
+        }
+
+        if (in_array($title, ['about', 'about us'], true)) {
+            $item->menu_item_parent = '0';
+        }
+    }
+
+    return array_values($items);
+}
+add_filter('wp_nav_menu_objects', 'pixelpress_primary_menu_structure', 10, 2);
+
+// Direct destination for Resource Library items; avoids intermediary single pages.
+function pixelpress_register_resource_link_field() {
+    if (!function_exists('acf_add_local_field_group')) {
+        return;
+    }
+
+    acf_add_local_field_group([
+        'key'    => 'group_pixelpress_resource_destination',
+        'title'  => 'Resource destination',
+        'fields' => [[
+            'key'          => 'field_pixelpress_resource_link',
+            'label'        => 'Resource link',
+            'name'         => 'resource_link',
+            'type'         => 'link',
+            'instructions' => 'Choose or paste the direct document, download, video or external website URL.',
+            'required'     => 1,
+            'return_format' => 'array',
+        ]],
+        'location' => [[[
+            'param'    => 'post_type',
+            'operator' => '==',
+            'value'    => 'resource',
+        ]]],
+        'position' => 'acf_after_title',
+        'style'    => 'seamless',
+    ]);
+}
+add_action('acf/init', 'pixelpress_register_resource_link_field');
+
 // Register ACF Blocks
 require_once get_theme_file_path('/inc/register-blocks.php');
 
