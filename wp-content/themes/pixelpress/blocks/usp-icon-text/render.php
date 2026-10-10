@@ -3,30 +3,44 @@ $mainTitle = get_field('main_title');
 $uspItems = get_field('usp_items');
 ?>
 
-<section class="usp-icon-text-block red-grad-bg-with-logomark py-10 lg:py-40 bg-cover bg-center bg-[var(--off-white)]">
+<section class="usp-icon-text-block red-grad-bg-with-logomark py-20 lg:py-28">
     <div class="container mx-auto px-4">
-        <h3 class="title-mark-white text-white mb-10"><?php echo $mainTitle ?></h3>
+        <?php if ($mainTitle) : ?>
+            <h3 class="title-mark-white text-white mb-10 lg:mb-12">
+                <?php echo esc_html($mainTitle); ?>
+            </h3>
+        <?php endif; ?>
 
-        <div class="grid auto-rows-auto grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <?php foreach($uspItems as $item):
-                $itemTitle = $item['title'];
-                $itemCopy = $item['copy'];
-                $itemIcon = $item['icon'];
-            ?>
-                <div class="flex flex-row items-start">
-                    <!-- Icon -->
-                    <img class="mr-4" src="<?php echo $itemIcon['url'] ?>">
-                    <!-- Title & Copy -->
-                    <div class="flex flex-col items-start ">
-                        <h4 class="uppercase text-white font-semibold">
-                            <?php echo $itemTitle ?>
-                        </h4>
-                        <span class="text-white/70 text-lg">
-                            <?php echo $itemCopy ?>
-                        </span>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        </div>
+        <?php if (is_array($uspItems) && $uspItems) : ?>
+            <ul class="usp-icon-text__grid">
+                <?php foreach ($uspItems as $item) :
+                    $itemTitle = $item['title'] ?? '';
+                    $itemCopy = $item['copy'] ?? '';
+                    $itemIcon = $item['icon'] ?? null;
+                    ?>
+                    <li class="usp-icon-text__item">
+                        <?php if ($itemIcon) : ?>
+                            <span class="usp-icon-text__icon" aria-hidden="true">
+                                <img src="<?php echo esc_url($itemIcon['url']); ?>" alt="">
+                            </span>
+                        <?php endif; ?>
+
+                        <div class="usp-icon-text__body">
+                            <?php if ($itemTitle) : ?>
+                                <h4 class="usp-icon-text__title">
+                                    <?php echo esc_html($itemTitle); ?>
+                                </h4>
+                            <?php endif; ?>
+
+                            <?php if ($itemCopy) : ?>
+                                <div class="usp-icon-text__copy">
+                                    <?php echo wp_kses_post($itemCopy); ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        <?php endif; ?>
     </div>
 </section>

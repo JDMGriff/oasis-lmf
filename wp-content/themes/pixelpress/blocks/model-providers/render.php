@@ -2,13 +2,42 @@
     $providers = array_key_exists('provider_list', $block['data'] ?? [])
         ? (bool) get_field('provider_list')
         : true;
+    $cataloguePdfId = (int) get_field('model_catalogue_pdf', get_queried_object_id());
+    $cataloguePdfUrl = $cataloguePdfId ? wp_get_attachment_url($cataloguePdfId) : '';
+    $cataloguePdfPath = $cataloguePdfId ? get_attached_file($cataloguePdfId) : '';
+    $cataloguePdfSize = $cataloguePdfPath && file_exists($cataloguePdfPath)
+        ? size_format(filesize($cataloguePdfPath), 1)
+        : '';
+    $cataloguePdfDate = $cataloguePdfId ? get_the_modified_date('F Y', $cataloguePdfId) : '';
 ?>
 
 <section class="py-20 bg-[var(--off-white)]">
     <div class="container mx-auto px-4">
-        <h3 class="title-mark mb-4">
-            Oasis Model Providers
-        </h3>
+        <div class="model-providers__heading">
+            <div class="model-providers__intro">
+                <h3 class="title-mark mb-4">
+                    Oasis Model Providers
+                </h3>
+
+                <p>
+                    Our model library is growing. More vendors and models are on the way, so the list below doesn't show everyone we're working with. Looking for a specific peril or region?
+                    <a href="mailto:info@oasislmf.org">Get in touch</a> and we'll be happy to help.
+                </p>
+            </div>
+
+            <?php if ($cataloguePdfUrl) : ?>
+                <a class="model-catalogue-download" href="<?php echo esc_url($cataloguePdfUrl); ?>" target="_blank" rel="noopener">
+                    <span class="model-catalogue-download__icon" aria-hidden="true">PDF</span>
+                    <span>
+                        <strong>Download model catalogue</strong>
+                        <?php if ($cataloguePdfSize || $cataloguePdfDate) : ?>
+                            <small><?php echo esc_html(implode(' · ', array_filter([$cataloguePdfSize, $cataloguePdfDate]))); ?></small>
+                        <?php endif; ?>
+                    </span>
+                    <span class="model-catalogue-download__arrow" aria-hidden="true">↓</span>
+                </a>
+            <?php endif; ?>
+        </div>
         <?php if ($providers === true) :?>
             <?php
                 $modelProviders = get_terms([

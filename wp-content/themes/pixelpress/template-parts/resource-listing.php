@@ -4,6 +4,27 @@ $resourceCategories = get_terms([
     'taxonomy'   => 'resource-category',
     'hide_empty' => true,
 ]);
+$categoryOrder = [
+    'Oasis Overview',
+    'Technical Videos',
+    'Core Perils',
+    'Developing World',
+    'Community Discussions',
+    'Peril Documentation',
+    'Papers and Research',
+    'Oasis Documentation',
+];
+
+if (is_array($resourceCategories)) {
+    usort($resourceCategories, static function ($a, $b) use ($categoryOrder) {
+        $aPosition = array_search($a->name, $categoryOrder, true);
+        $bPosition = array_search($b->name, $categoryOrder, true);
+        $aPosition = $aPosition === false ? PHP_INT_MAX : $aPosition;
+        $bPosition = $bPosition === false ? PHP_INT_MAX : $bPosition;
+
+        return $aPosition <=> $bPosition ?: strcasecmp($a->name, $b->name);
+    });
+}
 $introTitle = get_field('intro_title');
 $introCopy = get_field('intro_copy');
 

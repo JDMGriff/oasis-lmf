@@ -108,8 +108,8 @@ function tailwind_active_menu_item ($classes, $item) {
 }
 
 /**
- * Keep the primary navigation concise: the logo is the home link and About Us
- * should always be a top-level destination, even if the saved menu nests it.
+ * Keep the primary navigation concise: the logo already provides the home link.
+ * All other items retain the hierarchy configured in WordPress.
  */
 function pixelpress_primary_menu_structure($items, $args) {
     if (($args->theme_location ?? '') !== 'header-menu') {
@@ -120,15 +120,8 @@ function pixelpress_primary_menu_structure($items, $args) {
 
     foreach ($items as $key => $item) {
         $itemUrl = untrailingslashit((string) $item->url);
-        $title = strtolower(trim(wp_strip_all_tags($item->title)));
-
-        if ($title === 'home' || $itemUrl === $homeUrl) {
+        if (strtolower(trim(wp_strip_all_tags($item->title))) === 'home' || $itemUrl === $homeUrl) {
             unset($items[$key]);
-            continue;
-        }
-
-        if (in_array($title, ['about', 'about us'], true)) {
-            $item->menu_item_parent = '0';
         }
     }
 
@@ -164,6 +157,42 @@ function pixelpress_register_resource_link_field() {
     ]);
 }
 add_action('acf/init', 'pixelpress_register_resource_link_field');
+
+// Editable catalogue PDF shown on the Model Library page.
+function pixelpress_register_model_catalogue_field() {
+    if (!function_exists('acf_add_local_field_group')) {
+        return;
+    }
+
+    $modelLibraryPage = get_page_by_path('model-library');
+    if (!$modelLibraryPage) {
+        return;
+    }
+
+    acf_add_local_field_group([
+        'key'    => 'group_pixelpress_model_catalogue',
+        'title'  => 'Model catalogue download',
+        'fields' => [[
+            'key'           => 'field_pixelpress_model_catalogue_pdf',
+            'label'         => 'Catalogue PDF',
+            'name'          => 'model_catalogue_pdf',
+            'type'          => 'file',
+            'instructions'  => 'Upload or select the latest model and status catalogue. Replacing this file updates the download shown on the page.',
+            'required'      => 0,
+            'return_format' => 'id',
+            'library'       => 'all',
+            'mime_types'    => 'pdf',
+        ]],
+        'location' => [[[
+            'param'    => 'page',
+            'operator' => '==',
+            'value'    => (string) $modelLibraryPage->ID,
+        ]]],
+        'position' => 'acf_after_title',
+        'style'    => 'seamless',
+    ]);
+}
+add_action('acf/init', 'pixelpress_register_model_catalogue_field');
 
 // Register ACF Blocks
 require_once get_theme_file_path('/inc/register-blocks.php');

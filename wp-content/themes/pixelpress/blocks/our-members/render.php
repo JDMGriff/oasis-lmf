@@ -48,6 +48,7 @@
             <div class="logo-card-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-10">
                 <?php foreach ($members as $member) :
                     $memberId = $member->ID;
+                    $memberSlug = sanitize_html_class($member->post_name ?: sanitize_title($member->post_title));
                     $logo     = get_field('logo', $memberId);
                     $contactEmail = get_field('contact_email', $memberId);
                     $contactName = get_field('contact_name', $memberId);
@@ -55,7 +56,7 @@
 
                     <?php if ($contactEmail) : ?>
                         <button
-                            class="logo-card member-contact-trigger"
+                            class="logo-card logo-card--<?php echo esc_attr($memberSlug); ?> member-contact-trigger"
                             type="button"
                             data-member-name="<?php echo esc_attr(get_the_title($memberId)); ?>"
                             data-contact-name="<?php echo esc_attr($contactName); ?>"
@@ -63,18 +64,17 @@
                             aria-label="Contact <?php echo esc_attr(get_the_title($memberId)); ?>"
                         >
                     <?php else : ?>
-                        <div class="logo-card" aria-label="<?php echo esc_attr(get_the_title($memberId)); ?>">
+                        <div class="logo-card logo-card--<?php echo esc_attr($memberSlug); ?>" aria-label="<?php echo esc_attr(get_the_title($memberId)); ?>">
                     <?php endif; ?>
                         <span class="logo-card__image">
                             <?php if ($logo) : ?>
                                 <img
-                                    class="w-full h-full max-h-[82px] object-contain"
+                                    class="logo-card__logo"
                                     src="<?php echo esc_url($logo['url']); ?>"
                                     alt="<?php echo esc_attr($logo['alt'] ?: get_the_title($memberId)); ?>"
                                 >
                             <?php endif; ?>
                         </span>
-                        <span class="logo-card__name"><?php echo esc_html(get_the_title($memberId)); ?></span>
                     <?php echo $contactEmail ? '</button>' : '</div>'; ?>
 
                 <?php endforeach; ?>

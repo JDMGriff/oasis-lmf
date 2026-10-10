@@ -1,75 +1,68 @@
 <?php
-    $blockTitle = get_field('block_title');
-    $blockEyebrow = get_field('block_eyebrow_sub_title');
-    $steps = get_field('steps');
-    $stepTotal = is_array($steps) ? count($steps) : 0;
-    $blockIntro = get_field('block_intro');
-    $lowerCopy = get_field('lower_copy');
+$blockTitle = get_field('block_title');
+$blockEyebrow = get_field('block_eyebrow_sub_title');
+$steps = get_field('steps');
+$blockIntro = get_field('block_intro');
+$lowerCopy = get_field('lower_copy');
 ?>
 
-<section class="red-grad-bg-with-logomark py-10 lg:py-40">
+<section class="tiled-steps red-grad-bg-with-logomark py-20 lg:py-28">
     <div class="container px-4 mx-auto">
-        <div class="grid grid-cols-1 gap-x-6 gap-y-10 lg:grid-cols-2">
+        <header class="tiled-steps__header">
+            <?php if ($blockEyebrow) : ?>
+                <p class="title-mark-white mb-4">
+                    <?php echo esc_html($blockEyebrow); ?>
+                </p>
+            <?php endif; ?>
 
-            <!-- Block heading -->
-            <?php if ($blockTitle): ?>
-                <div class="flex flex-col">
-                    <?php if ($blockEyebrow): ?>
-                        <p class="title-mark-white">
-                            <?php echo $blockEyebrow; ?>
-                        </p>
-                    <?php endif; ?>
+            <?php if ($blockTitle) : ?>
+                <h3 class="text-white <?php echo $blockEyebrow ? '' : 'title-mark-white'; ?>">
+                    <?php echo esc_html($blockTitle); ?>
+                </h3>
+            <?php endif; ?>
 
-                    <h3 class="text-white <?php if (!$blockEyebrow): echo 'title-mark-white'; endif; ?>">
-                        <?php echo $blockTitle; ?>
-                    </h3>
+            <?php if ($blockIntro) : ?>
+                <div class="tiled-steps__intro">
+                    <?php echo wp_kses_post($blockIntro); ?>
                 </div>
             <?php endif; ?>
+        </header>
 
-            <?php if($blockIntro): ?>
-                <div class="col-span-2 mb-6 text-white">
-                    <?php echo $blockIntro ?>
-                </div>
-            <?php endif; ?>
-
-            <!-- Leave the top-right cell empty when there are four steps -->
-            <?php if ($stepTotal === 4 && !$blockIntro): ?>
-                <div class="hidden lg:block" aria-hidden="true"></div>
-            <?php endif; ?>
-
-            <!-- Steps -->
-            <?php if ($steps): ?>
-                <?php foreach ($steps as $index => $step):
-                    $stepTitle = $step['step_title'];
-                    $stepCopy  = $step['step_copy'];
-                ?>
-                    <div class="flex items-start gap-4">
-                        <span class="flex shrink-0 items-center justify-center w-[38px] h-[38px] border-2 border-dashed border-[var(--off-white)] text-2xl font-semibold text-white rounded-full">
-                            <?php echo $index + 1; ?>
-                        </span>
-
-                        <div>
-                            <?php if ($stepTitle): ?>
-                                <h4 class="mb-2 text-white uppercase">
-                                    <?php echo $stepTitle; ?>
-                                </h4>
-                            <?php endif; ?>
-
-                            <?php if ($stepCopy): ?>
-                                <p class="text-white">
-                                    <?php echo $stepCopy; ?>
-                                </p>
-                            <?php endif; ?>
+        <?php if (is_array($steps) && $steps) : ?>
+            <ol class="tiled-steps__grid">
+                <?php foreach ($steps as $index => $step) :
+                    $stepTitle = $step['step_title'] ?? '';
+                    $stepCopy = $step['step_copy'] ?? '';
+                    ?>
+                    <li class="tiled-step">
+                        <div class="tiled-step__topline">
+                            <span class="tiled-step__number" aria-hidden="true">
+                                <?php echo esc_html(str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT)); ?>
+                            </span>
+                            <span class="tiled-step__rule" aria-hidden="true"></span>
                         </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
 
-            <?php if($lowerCopy): ?>
-                <div class="col-span-2 mb-6 text-white">
-                    <?php echo $lowerCopy ?>
-                </div>
-            <?php endif; ?>
-        </div>
+                        <?php if ($stepTitle) : ?>
+                            <h4 class="tiled-step__title">
+                                <?php echo esc_html($stepTitle); ?>
+                            </h4>
+                        <?php endif; ?>
+
+                        <?php if ($stepCopy) : ?>
+                            <div class="tiled-step__copy">
+                                <?php echo wp_kses_post($stepCopy); ?>
+                            </div>
+                        <?php endif; ?>
+                    </li>
+                <?php endforeach; ?>
+            </ol>
+        <?php endif; ?>
+
+        <?php if ($lowerCopy) : ?>
+            <div class="tiled-steps__footer">
+                <span class="tiled-steps__footer-mark" aria-hidden="true">✓</span>
+                <div><?php echo wp_kses_post($lowerCopy); ?></div>
+            </div>
+        <?php endif; ?>
     </div>
 </section>
