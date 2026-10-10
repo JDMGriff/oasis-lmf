@@ -1883,6 +1883,54 @@ ul.nav-menu > li:last-child > a:focus-visible {
     color: var(--brand-red);
 }
 
+/* Archive pagination */
+.pagination .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+.pagination .page-numbers {
+    display: inline-flex;
+    width: 42px;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(17, 17, 17, .16);
+    border-radius: 6px;
+    color: var(--off-black);
+    background: white;
+    font-size: 15px;
+    font-weight: 650;
+    line-height: 1;
+    transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+.pagination a.page-numbers:hover,
+.pagination a.page-numbers:focus-visible {
+    border-color: var(--brand-red);
+    color: white;
+    background: var(--brand-red);
+    transform: translateY(-2px);
+}
+.pagination .page-numbers.current {
+    border-color: var(--brand-red);
+    color: white;
+    background: var(--brand-red);
+}
+.pagination .page-numbers.prev,
+.pagination .page-numbers.next {
+    width: auto;
+    padding: 0 16px;
+}
+.pagination .page-numbers.prev::before {
+    content: "←";
+    margin-right: 7px;
+}
+.pagination .page-numbers.next::after {
+    content: "→";
+    margin-left: 7px;
+}
+
 /* Resource library */
 .resource-category__title {
     padding-bottom: 12px;

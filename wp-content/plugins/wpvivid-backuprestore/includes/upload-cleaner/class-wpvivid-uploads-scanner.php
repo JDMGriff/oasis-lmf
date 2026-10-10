@@ -1185,6 +1185,82 @@ class WPvivid_Uploads_Scanner
         return $files;
     }
 
+    public function get_media_from_bricks( $post )
+    {
+        $files=array();
+        $bricks_data=get_post_meta($post,'_bricks_page_content_2',false);
+
+        if(empty($bricks_data)||!is_array($bricks_data))
+        {
+            return $files;
+        }
+
+        $attachment_ids=array();
+        $urls=array();
+
+        foreach($bricks_data as $elements)
+        {
+            if(is_string($elements)&&is_serialized($elements))
+            {
+                $elements=@unserialize($elements,array('allowed_classes'=>false));
+            }
+
+            if(is_array($elements))
+            {
+                $this->collect_media_from_bricks($elements,$attachment_ids,$urls);
+            }
+        }
+
+        foreach(array_unique($attachment_ids) as $attachment_id)
+        {
+            $files=array_merge($files,$this->get_img_from_id($attachment_id));
+        }
+
+        foreach(array_unique($urls) as $url)
+        {
+            $src=$this->get_src($url);
+            if($src!==false)
+            {
+                $files[]=$src;
+            }
+        }
+
+        return array_values(array_unique(array_filter($files)));
+    }
+
+    private function collect_media_from_bricks( $data, &$attachment_ids, &$urls )
+    {
+        if(!is_array($data))
+        {
+            return;
+        }
+
+        if(isset($data['id'])&&is_numeric($data['id'])&&intval($data['id'])>0)
+        {
+            $attachment_id=intval($data['id']);
+            if(get_post_type($attachment_id)==='attachment')
+            {
+                $attachment_ids[]=$attachment_id;
+            }
+        }
+
+        foreach($data as $value)
+        {
+            if(is_array($value))
+            {
+                $this->collect_media_from_bricks($value,$attachment_ids,$urls);
+            }
+            else if(is_string($value)&&$this->is_url($value))
+            {
+                $src=$this->get_src($value);
+                if($src!==false)
+                {
+                    $urls[]=$value;
+                }
+            }
+        }
+    }
+
     public function get_media_from_wpresidence( $post )
     {
         $files=array();
@@ -2081,9 +2157,10 @@ class WPvivid_Uploads_Scanner
         global $wpdb;
 
         $file=str_replace('\\','/',$file);
-
         $table = $wpdb->prefix . "wpvivid_scan_result";
-        $row = $wpdb->get_row( "SELECT * FROM $table WHERE path = '$file'" );
+        $row = $wpdb->get_row(
+            $wpdb->prepare("SELECT * FROM $table WHERE path = %s", $file)
+        );
         if (empty($row))
         {
             $quick_scan=get_option('wpvivid_uc_quick_scan',false);
@@ -2109,10 +2186,14 @@ class WPvivid_Uploads_Scanner
 
                     if(!empty($files))
                     {
-                        $files = implode("','",$files);
-                        $sql= "SELECT * FROM $table WHERE path IN ('$files')";
-                        $row = $wpdb->get_row($sql);
+                        $files = array_values(array_map('strval', $files));
+                        $placeholders = implode(',', array_fill(0, count($files), '%s'));
+                        $sql = $wpdb->prepare(
+                            "SELECT * FROM $table WHERE path IN ($placeholders)",
+                            $files
+                        );
 
+                        $row = $wpdb->get_row($sql);
                         if (!empty($row))
                         {
                             $this->file_found_cache[$attachment_id]=1;
@@ -2135,21 +2216,24 @@ class WPvivid_Uploads_Scanner
     {
         global $wpdb;
 
-        $file=basename($file);
+        $file=basename((string)$file);
 
-        $sql = "SELECT post_id
+        $sql = $wpdb->prepare(
+            "SELECT post_id
 			FROM {$wpdb->postmeta}
-			WHERE meta_key = '_wp_attachment_metadata'
-			AND meta_value LIKE '%$file%'";
+			WHERE meta_key = %s
+			AND meta_value LIKE %s",
+            '_wp_attachment_metadata',
+            '%'.$wpdb->esc_like($file).'%'
+        );
 
         $ret = $wpdb->get_var( $sql );
-
         if(!$ret)
         {
             $sql = $wpdb->prepare( "SELECT post_id
 			FROM {$wpdb->postmeta}
-			WHERE meta_key = '_wp_attached_file'
-			AND meta_value = %s", $file
+			WHERE meta_key = %s
+			AND meta_value = %s", '_wp_attached_file', $file
             );
             $ret = $wpdb->get_var( $sql );
         }
@@ -2160,29 +2244,28 @@ class WPvivid_Uploads_Scanner
     {
         global $wpdb;
 
-        $where='';
-        if(!empty($search)||!empty($folder))
+        $conditions=array();
+        $values=array();
+        if(!empty($search))
         {
-            $where='WHERE ';
-            if(!empty($search))
-            {
-                $where.="`path` LIKE '%$search%'";
-            }
-
-            if(!empty($search)&&!empty($folder))
-            {
-                $where.=' AND ';
-            }
-
-            if(!empty($folder))
-            {
-                $where.="`folder` = '$folder'";
-            }
+            $conditions[]='`path` LIKE %s';
+            $values[]='%'.$wpdb->esc_like((string)$search).'%';
         }
+        if(!empty($folder))
+        {
+            $conditions[]='`folder` = %s';
+            $values[]=(string)$folder;
+        }
+
+        $where=empty($conditions)?'':' WHERE '.implode(' AND ',$conditions);
 
         $table = $wpdb->prefix . "wpvivid_unused_uploads_files";
 
-        $sql="SELECT * FROM `$table` ".$where;
+        $sql="SELECT * FROM `$table`".$where;
+        if(!empty($values))
+        {
+            $sql=$wpdb->prepare($sql,$values);
+        }
 
         return $wpdb->get_results($sql,ARRAY_A);
     }
@@ -2259,10 +2342,19 @@ class WPvivid_Uploads_Scanner
     {
         global $wpdb;
 
-        $ids=implode(",",$selected_list);
+        $selected_list=array_values(array_filter(array_map('absint',(array)$selected_list)));
+        if(empty($selected_list))
+        {
+            return false;
+        }
+
+        $placeholders=implode(',',array_fill(0,count($selected_list),'%d'));
 
         $table = $wpdb->prefix . "wpvivid_unused_uploads_files";
-        $sql="SELECT * FROM $table WHERE `id` IN ($ids)";
+        $sql=$wpdb->prepare(
+            "SELECT * FROM $table WHERE `id` IN ($placeholders)",
+            $selected_list
+        );
         $result=$wpdb->get_results($sql,ARRAY_A);
         if($result)
         {
@@ -2285,10 +2377,18 @@ class WPvivid_Uploads_Scanner
 
         $table = $wpdb->prefix . "wpvivid_unused_uploads_files";
 
-        $ids=implode(",",$selected_list);
+        $selected_list=array_values(array_filter(array_map('absint',(array)$selected_list)));
+        if(empty($selected_list))
+        {
+            return false;
+        }
 
-        $sql="DELETE FROM $table WHERE `id` IN ($ids)";
+        $placeholders=implode(',',array_fill(0,count($selected_list),'%d'));
 
+        $sql=$wpdb->prepare(
+            "DELETE FROM $table WHERE `id` IN ($placeholders)",
+            $selected_list
+        );
         $result=$wpdb->query($sql);
         if($result)
         {
@@ -2304,30 +2404,26 @@ class WPvivid_Uploads_Scanner
     {
         global $wpdb;
 
-        $where='';
-        if(!empty($search)||!empty($folder))
+        $conditions=array();
+        $values=array();
+        if(!empty($search))
         {
-            $where='WHERE ';
-            if(!empty($search))
-            {
-                $where.="`path` LIKE '%$search%'";
-            }
-
-            if(!empty($search)&&!empty($folder))
-            {
-                $where.=' AND ';
-            }
-
-            if(!empty($folder))
-            {
-                $where.="`folder` = '$folder'";
-            }
+            $conditions[]='`path` LIKE %s';
+            $values[]='%'.$wpdb->esc_like((string)$search).'%';
         }
-        $where.=" LIMIT $offset,$count";
-        //LIMIT
+        if(!empty($folder))
+        {
+            $conditions[]='`folder` = %s';
+            $values[]=(string)$folder;
+        }
+
+        $where=empty($conditions)?'':' WHERE '.implode(' AND ',$conditions);
+        $where.=' LIMIT %d,%d';
+        $values[]=max(0,(int)$offset);
+        $values[]=max(1,(int)$count);
 
         $table = $wpdb->prefix . "wpvivid_unused_uploads_files";
-        $sql="SELECT * FROM $table ".$where;
+        $sql=$wpdb->prepare("SELECT * FROM $table".$where,$values);
         $result=$wpdb->get_results($sql,ARRAY_A);
         if($result)
         {
@@ -2348,31 +2444,25 @@ class WPvivid_Uploads_Scanner
     {
         global $wpdb;
 
-        $where='';
-        if(!empty($search)||!empty($folder))
+        $conditions=array();
+        $values=array();
+        if(!empty($search))
         {
-            $where='WHERE ';
-            if(!empty($search))
-            {
-                $where.="`path` LIKE '%$search%'";
-            }
-
-            if(!empty($search)&&!empty($folder))
-            {
-                $where.=' AND ';
-            }
-
-            if(!empty($folder))
-            {
-                $where.="`folder` = '$folder'";
-            }
+            $conditions[]='`path` LIKE %s';
+            $values[]='%'.$wpdb->esc_like((string)$search).'%';
         }
-        $where.=" LIMIT $count";
-        //LIMIT
+        if(!empty($folder))
+        {
+            $conditions[]='`folder` = %s';
+            $values[]=(string)$folder;
+        }
+
+        $where=empty($conditions)?'':' WHERE '.implode(' AND ',$conditions);
+        $where.=' LIMIT %d';
+        $values[]=max(1,(int)$count);
 
         $table = $wpdb->prefix . "wpvivid_unused_uploads_files";
-        $sql="DELETE FROM $table ".$where;
-
+        $sql=$wpdb->prepare("DELETE FROM $table".$where,$values);
         $result=$wpdb->query($sql);
         if($result)
         {

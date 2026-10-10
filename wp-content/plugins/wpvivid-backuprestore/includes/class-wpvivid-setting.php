@@ -143,18 +143,44 @@ class WPvivid_Setting
     }
 
     public static function get_last_backup_message($option_name, $default = array()){
-        $message = self::get_option($option_name, $default);
+        if ($option_name === 'wpvivid_last_msg' && class_exists('WPvivid_Option'))
+        {
+            $message = WPvivid_Option::get_last_backup_message($default);
+        }
+        else
+        {
+            $message = self::get_option($option_name, $default);
+        }
+
         $ret = array();
-        if(!empty($message['id'])) {
+        if(!empty($message['id']))
+        {
             $ret['id'] = $message['id'];
-            $ret['status'] = $message['status'];
-            $ret['status']['start_time'] = gmdate("M d, Y H:i", $ret['status']['start_time']);
-            $ret['status']['run_time'] = gmdate("M d, Y H:i", $ret['status']['run_time']);
-            $ret['status']['timeout'] = gmdate("M d, Y H:i", $ret['status']['timeout']);
+            $ret['status'] = isset($message['status']) && is_array($message['status']) ? $message['status'] : array();
+
+            if (isset($ret['status']['start_time']))
+            {
+                $ret['status']['start_time'] = gmdate('M d, Y H:i', $ret['status']['start_time']);
+            }
+
+            if (isset($ret['status']['run_time']))
+            {
+                $ret['status']['run_time'] = gmdate('M d, Y H:i', $ret['status']['run_time']);
+            }
+
+            if (isset($ret['status']['timeout']))
+            {
+                $ret['status']['timeout'] = gmdate('M d, Y H:i', $ret['status']['timeout']);
+            }
+
             if(isset($message['options']['log_file_name']))
+            {
                 $ret['log_file_name'] = $message['options']['log_file_name'];
+            }
             else
+            {
                 $ret['log_file_name'] ='';
+            }
         }
         return $ret;
     }
@@ -534,7 +560,6 @@ class WPvivid_Setting
         if($history)
         {
             $json['data']['wpvivid_task_list']=self::get_option('wpvivid_task_list');
-            $json['data']['wpvivid_last_msg']=self::get_option('wpvivid_last_msg');
             $json['data']['wpvivid_user_history']=self::get_option('wpvivid_user_history');
             $json = apply_filters('wpvivid_history_addon', $json);
         }

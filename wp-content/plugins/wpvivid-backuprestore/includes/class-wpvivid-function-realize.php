@@ -165,8 +165,17 @@ class WPvivid_Function_Realize
             $ret['log_file']=$backup['log'];
         }
         else if($read_type == 'lastlog'){
-            $option = $param;
-            $log_file_name= $wpvivid_plugin->wpvivid_log->GetSaveLogFolder().$option.'_log.txt';
+            $option = sanitize_text_field(wp_unslash($param));
+            if ($option === '' || preg_match('/\A[a-zA-Z0-9_-]+\z/', $option) !== 1)
+            {
+                $information['result'] = 'failed';
+                $information['error'] = __('Invalid log file name.', 'wpvivid-backuprestore');
+                return $information;
+            }
+
+            $log_dir = trailingslashit($wpvivid_plugin->wpvivid_log->GetSaveLogFolder());
+            $log_file_name = $log_dir . $option . '_log.txt';
+
             if(!file_exists($log_file_name))
             {
                 $information['result']='failed';

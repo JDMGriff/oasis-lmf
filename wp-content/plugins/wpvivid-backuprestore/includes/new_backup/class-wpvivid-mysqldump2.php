@@ -827,7 +827,6 @@ class WPvivid_Mysqldump2
                     {
                         if ($this->dumpSettings['complete-insert'])
                         {
-                            var_dump('test1');
                             $lineSize += $this->compressManager->write(
                                 "INSERT INTO `$tableName` (" .
                                 implode(", ", $colStmt) .

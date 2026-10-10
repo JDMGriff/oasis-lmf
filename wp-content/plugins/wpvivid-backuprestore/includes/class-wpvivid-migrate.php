@@ -559,9 +559,30 @@ class WPvivid_Migrate
                 $query=strtok('?');
             }
             parse_str($query,$query_arr);
+
+            if (!isset($query_arr['token'], $query_arr['expires'], $query_arr['domain'], $query_arr['auth_key'], $query_arr['protocol_version']) ||
+                !is_string($query_arr['token']) ||
+                !is_string($query_arr['auth_key']))
+            {
+                $ret['result'] = WPVIVID_FAILED;
+                $ret['error'] = 'The key uses an unsupported security protocol.';
+                echo wp_json_encode($ret);
+                die();
+            }
+
             $token=$query_arr['token'];
-            $expires=$query_arr['expires'];
-            $domain=$query_arr['domain'];
+            $expires=absint($query_arr['expires']);
+            $domain=esc_url_raw($query_arr['domain']);
+            $auth_key = sanitize_text_field($query_arr['auth_key']);
+            $protocol_version = absint($query_arr['protocol_version']);
+
+            if ($protocol_version !== 2 || preg_match('/\A[a-f0-9]{64}\z/', $auth_key) !== 1)
+            {
+                $ret['result'] = WPVIVID_FAILED;
+                $ret['error'] = 'The key uses an invalid security protocol.';
+                echo wp_json_encode($ret);
+                die();
+            }
 
             if ($expires != 0 && time() > $expires) {
                 $ret['result'] = 'failed';
@@ -582,8 +603,23 @@ class WPvivid_Migrate
                 die();
             }
             $data=base64_encode($data);
-            
-            $args['body']=array('wpvivid_content'=>$data,'wpvivid_action'=>'send_to_site_connect');
+
+            $action = 'send_to_site_connect';
+            $signature = hash_hmac(
+                'sha256',
+                $action . "\n" . $data,
+                $auth_key
+            );
+
+            $args['body'] = array(
+                'wpvivid_content'          => $data,
+                'wpvivid_action'           => $action,
+                'wpvivid_protocol_version' => 2,
+                'wpvivid_client_type'      => 'free',
+                'wpvivid_client_version'   => defined('WPVIVID_PLUGIN_VERSION') ? WPVIVID_PLUGIN_VERSION : '',
+                'wpvivid_signature'        => $signature,
+            );
+
             $args['timeout']=30;
             $response=wp_remote_post($url,$args);
 
@@ -606,6 +642,8 @@ class WPvivid_Migrate
                             $options=WPvivid_Setting::get_option('wpvivid_saved_api_token');
 
                             $options[$url]['token']=$token;
+                            $options[$url]['auth_key'] = $auth_key;
+                            $options[$url]['protocol_version'] = $protocol_version;
                             $options[$url]['url']=$url;
                             $options[$url]['expires']=$expires;
                             $options[$url]['domain']=$domain;
@@ -683,6 +721,16 @@ class WPvivid_Migrate
         die();
     }
 
+    /**
+     * Handles the legacy send-to-site AJAX request.
+     *
+     * The current UI uses the wpvivid_send_backup_to_site_2 AJAX action handled
+     * by WPvivid_Backup2::send_backup_to_site().
+     *
+     * @deprecated 0.9.135 Use wpvivid_send_backup_to_site_2 instead.
+     *
+     * @return void
+     */
     public function send_backup_to_site()
     {
         try {
@@ -727,8 +775,42 @@ class WPvivid_Migrate
             $json=wp_json_encode($json);
             $crypt=new WPvivid_crypt(base64_decode($options[$url]['token']));
             $data=$crypt->encrypt_message($json);
+            if ($data === false)
+            {
+                $ret['result'] = WPVIVID_FAILED;
+                $ret['error'] = 'Data encryption failed.';
+                echo wp_json_encode($ret);
+                die();
+            }
             $data=base64_encode($data);
-            $args['body']=array('wpvivid_content'=>$data,'wpvivid_action'=>'send_to_site_connect');
+            if (!isset($options[$url]['auth_key'], $options[$url]['protocol_version']) ||
+                !is_string($options[$url]['auth_key']) ||
+                preg_match('/\A[a-f0-9]{64}\z/', $options[$url]['auth_key']) !== 1 ||
+                (int)$options[$url]['protocol_version'] !== 2)
+            {
+                $ret['result'] = WPVIVID_FAILED;
+                $ret['error'] = 'The migration key uses an unsupported security protocol. Please delete it and generate a new key.';
+                echo wp_json_encode($ret);
+                die();
+            }
+            $action = 'send_to_site_connect';
+
+            $signature = hash_hmac(
+                'sha256',
+                $action . "\n" . $data,
+                $options[$url]['auth_key']
+            );
+
+            $args['body'] = array(
+                'wpvivid_content'          => $data,
+                'wpvivid_action'           => $action,
+                'wpvivid_protocol_version' => 2,
+                'wpvivid_client_type'      => 'free',
+                'wpvivid_client_version'   => defined('WPVIVID_PLUGIN_VERSION') ? WPVIVID_PLUGIN_VERSION : '',
+                'wpvivid_signature'        => $signature,
+            );
+
+            $args['timeout'] = 30;
             $response=wp_remote_post($url,$args);
 
             if ( is_wp_error( $response ) )
@@ -777,6 +859,8 @@ class WPvivid_Migrate
 
             $remote_option['url'] = $options[$url]['url'];
             $remote_option['token'] = $options[$url]['token'];
+            $remote_option['auth_key'] = $options[$url]['auth_key'];
+            $remote_option['protocol_version'] = $options[$url]['protocol_version'];
             $remote_option['type'] = WPVIVID_REMOTE_SEND_TO_SITE;
             $remote_options['temp'] = $remote_option;
 
@@ -908,6 +992,17 @@ class WPvivid_Migrate
         }
     }
 
+    /**
+     * Generates a migration key using the legacy AJAX response format.
+     *
+     * The current UI uses wpvivid_generate_url_ex and generate_url_ex(), which
+     * return a structured JSON response.
+     *
+     * @deprecated 0.9.135 Use generate_url_ex() and the
+     *                         wpvivid_generate_url_ex AJAX action instead.
+     *
+     * @return void
+     */
     public function generate_url()
     {
         global $wpvivid_plugin;
@@ -953,17 +1048,43 @@ class WPvivid_Migrate
         }
 
         $key_size = 2048;
-        $rsa = new Crypt_RSA();
-        $keys = $rsa->createKey($key_size);
-        $options['public_key']=base64_encode($keys['publickey']);
-        $options['private_key']=base64_encode($keys['privatekey']);
+        $private_key = \WPvividphpseclib3\Crypt\RSA::createKey($key_size);
+
+        $keys = array(
+            'privatekey' => $private_key->toString('PKCS8'),
+            'publickey'  => $private_key->getPublicKey()->toString('PKCS8'),
+        );
+
+        $options['public_key'] = base64_encode($keys['publickey']);
+        $options['private_key'] = base64_encode($keys['privatekey']);
+        try
+        {
+            $options['auth_key'] = bin2hex(random_bytes(32));
+        }
+        catch (Exception $e)
+        {
+            status_header(500);
+            echo 'Failed to generate a secure migration authentication key.';
+            die();
+        }
+        $options['protocol_version'] = 2;
         $options['expires']=$expires;
         $options['domain']=home_url();
 
         WPvivid_Setting::update_option('wpvivid_api_token',$options);
 
         $url= $options['domain'];
-        $url=$url.'?domain='.$options['domain'].'&token='.$options['public_key'].'&expires='.$expires;
+        $url = add_query_arg(
+            array(
+                'domain'           => $options['domain'],
+                'token'            => $options['public_key'],
+                'auth_key'         => $options['auth_key'],
+                'protocol_version' => $options['protocol_version'],
+                'expires'          => $expires,
+            ),
+            $url
+        );
+
         echo $url;
         die();
     }
@@ -1013,17 +1134,47 @@ class WPvivid_Migrate
         }
 
         $key_size = 2048;
-        $rsa = new Crypt_RSA();
-        $keys = $rsa->createKey($key_size);
-        $options['public_key']=base64_encode($keys['publickey']);
-        $options['private_key']=base64_encode($keys['privatekey']);
+        $private_key = \WPvividphpseclib3\Crypt\RSA::createKey($key_size);
+
+        $keys = array(
+            'privatekey' => $private_key->toString('PKCS8'),
+            'publickey'  => $private_key->getPublicKey()->toString('PKCS8'),
+        );
+
+        $options['public_key'] = base64_encode($keys['publickey']);
+        $options['private_key'] = base64_encode($keys['privatekey']);
+        try
+        {
+            $options['auth_key'] = bin2hex(random_bytes(32));
+        }
+        catch (Exception $e)
+        {
+            $ret['result'] = WPVIVID_FAILED;
+            $ret['error'] = __(
+                'Failed to generate a secure migration authentication key.',
+                'wpvivid-backuprestore'
+            );
+
+            echo wp_json_encode($ret);
+            die();
+        }
+        $options['protocol_version'] = 2;
         $options['expires']=$expires;
         $options['domain']=home_url();
 
         WPvivid_Setting::update_option('wpvivid_api_token',$options);
 
         $url= $options['domain'];
-        $url=$url.'?domain='.$options['domain'].'&token='.$options['public_key'].'&expires='.$expires;
+        $url = add_query_arg(
+            array(
+                'domain'           => $options['domain'],
+                'token'            => $options['public_key'],
+                'auth_key'         => $options['auth_key'],
+                'protocol_version' => $options['protocol_version'],
+                'expires'          => $expires,
+            ),
+            $url
+        );
 
         $ret['result']='success';
         $ret['url']=$url;

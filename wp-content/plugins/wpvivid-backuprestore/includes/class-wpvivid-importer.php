@@ -8,6 +8,8 @@
  * Interface Name: WPvivid_media_importer
  */
 
+require_once WPVIVID_PLUGIN_DIR . '/includes/class-wpvivid-extract-security.php';
+
 if ( ! class_exists( 'WP_List_Table' ) )
 {
     require_once( ABSPATH . 'wp-admin/includes/class-wp-list-table.php' );
@@ -558,24 +560,46 @@ class WPvivid_media_importer
             $xml_file=$ret['json_data']['xml_file'];
             $xml_file_name = $ret['json_data']['xml_file'];
             $this->import_log->wpvivid_write_import_log('Prepare to extract, file name: '.$xml_file, 'notice');
-            $zip_ret = $archive->extract(WPVIVID_PCLZIP_OPT_BY_NAME,basename($xml_file),WPVIVID_PCLZIP_OPT_PATH,$path,WPVIVID_PCLZIP_OPT_REPLACE_NEWER,WPVIVID_PCLZIP_OPT_TEMP_FILE_THRESHOLD,16);
+            WPvivid_Extract_Security::begin($path);
+            $zip_ret = $archive->extract(WPVIVID_PCLZIP_OPT_BY_NAME,basename($xml_file),WPVIVID_PCLZIP_OPT_PATH,$path,WPVIVID_PCLZIP_OPT_REPLACE_NEWER,WPVIVID_PCLZIP_CB_PRE_EXTRACT,'wpvivid_function_pre_extract_security_callback',WPVIVID_PCLZIP_OPT_TEMP_FILE_THRESHOLD,16);
+            $path_validation_failed = WPvivid_Extract_Security::failed();
+            $path_validation_error = WPvivid_Extract_Security::error();
+            WPvivid_Extract_Security::end();
+            if($path_validation_failed)
+            {
+                $zip_ret=false;
+            }
             if(!$zip_ret)
             {
-                $this->import_log->wpvivid_write_import_log('Failed to extract, error: '.$archive->errorInfo(true), 'notice');
-                WPvivid_Impoter_taskmanager::update_import_task_status($id, 'error', true, false, false, $archive->errorInfo(true));
+                $extract_error = $path_validation_failed
+                    ? 'WPVIVID_PCLZIP_ERR_DIRECTORY_RESTRICTION (-21): '.$path_validation_error
+                    : $archive->errorInfo(true);
+                $this->import_log->wpvivid_write_import_log('Failed to extract, error: '.$extract_error, 'notice');
+                WPvivid_Impoter_taskmanager::update_import_task_status($id, 'error', true, false, false, $extract_error);
                 $ret['result']='failed';
-                $ret['error'] = $archive->errorInfo(true);
+                $ret['error'] = $extract_error;
                 return $ret;
             }
             $this->import_log->wpvivid_write_import_log('The file extracton is completed, file name: '.$xml_file, 'notice');
             $this->import_log->wpvivid_write_import_log('Prepare to extract, file name: '.$file_path, 'notice');
+            WPvivid_Extract_Security::begin(WP_CONTENT_DIR);
             $zip_ret = $archive->extract(WPVIVID_PCLZIP_OPT_PATH, WP_CONTENT_DIR, WPVIVID_PCLZIP_OPT_REPLACE_NEWER, WPVIVID_PCLZIP_CB_PRE_EXTRACT, 'wpvivid_function_pre_extract_import_callback', WPVIVID_PCLZIP_OPT_TEMP_FILE_THRESHOLD,16);
+            $path_validation_failed = WPvivid_Extract_Security::failed();
+            $path_validation_error = WPvivid_Extract_Security::error();
+            WPvivid_Extract_Security::end();
+            if($path_validation_failed)
+            {
+                $zip_ret=false;
+            }
             if(!$zip_ret)
             {
-                $this->import_log->wpvivid_write_import_log('Failed to extract, error: '.$archive->errorInfo(true), 'notice');
-                WPvivid_Impoter_taskmanager::update_import_task_status($id, 'error', true, false, false, $archive->errorInfo(true));
+                $extract_error = $path_validation_failed
+                    ? 'WPVIVID_PCLZIP_ERR_DIRECTORY_RESTRICTION (-21): '.$path_validation_error
+                    : $archive->errorInfo(true);
+                $this->import_log->wpvivid_write_import_log('Failed to extract, error: '.$extract_error, 'notice');
+                WPvivid_Impoter_taskmanager::update_import_task_status($id, 'error', true, false, false, $extract_error);
                 $ret['result']='failed';
-                $ret['error'] = $archive->errorInfo(true);
+                $ret['error'] = $extract_error;
                 return $ret;
             }
             $this->import_log->wpvivid_write_import_log('The file extracton is completed, file name: '.$file_path, 'notice');
@@ -1792,6 +1816,11 @@ class WPvivid_media_importer
 
 function wpvivid_function_pre_extract_import_callback($p_event, &$p_header)
 {
+    if (!WPvivid_Extract_Security::validate($p_header['filename']))
+    {
+        return 2;
+    }
+
     global $xml_file_name;
 
     if(strpos($p_header['filename'],$xml_file_name)!==false)

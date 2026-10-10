@@ -63,7 +63,7 @@ class WPvivid_Public_Interface
             $list_tasks[$task['id']]=$backup->get_backup_task_info($task['id']);
             if($list_tasks[$task['id']]['task_info']['need_update_last_task']===true){
                 $task_msg = WPvivid_taskmanager::get_task($task['id']);
-                WPvivid_Setting::update_option('wpvivid_last_msg',$task_msg);
+                WPvivid_Option::update_last_backup_message($task_msg);
                 apply_filters('wpvivid_set_backup_report_addon_mainwp', $task_msg);
             }
         }

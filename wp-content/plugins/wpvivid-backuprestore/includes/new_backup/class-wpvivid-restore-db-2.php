@@ -239,12 +239,22 @@ class WPvivid_Restore_DB_2
             define(PCLZIP_TEMPORARY_DIR,dirname($root_path));
 
         $archive = new WPvivid_PclZip($file_name);
-        $zip_ret = $archive->extract(WPVIVID_PCLZIP_OPT_PATH, $root_path,WPVIVID_PCLZIP_OPT_REPLACE_NEWER,WPVIVID_PCLZIP_CB_PRE_EXTRACT,'wpvivid_function_pre_extract_callback',WPVIVID_PCLZIP_OPT_TEMP_FILE_THRESHOLD,16);
+        WPvivid_Extract_Security::begin($root_path);
+        $zip_ret = $archive->extract(WPVIVID_PCLZIP_OPT_PATH, $root_path,WPVIVID_PCLZIP_OPT_REPLACE_NEWER,WPVIVID_PCLZIP_CB_PRE_EXTRACT,'wpvivid_function_pre_extract_security_callback_2',WPVIVID_PCLZIP_OPT_TEMP_FILE_THRESHOLD,16);
+        $path_validation_failed = WPvivid_Extract_Security::failed();
+        $path_validation_error = WPvivid_Extract_Security::error();
+        WPvivid_Extract_Security::end();
+        if($path_validation_failed)
+        {
+            $zip_ret=false;
+        }
         if(!$zip_ret)
         {
             $ret['result']='failed';
-            $ret['error'] = $archive->errorInfo(true);
-            $this->log->WriteLog('Extracting failed. Error:'.$archive->errorInfo(true),'notice');
+            $ret['error'] = $path_validation_failed
+                ? 'WPVIVID_PCLZIP_ERR_DIRECTORY_RESTRICTION (-21): '.$path_validation_error
+                : $archive->errorInfo(true);
+            $this->log->WriteLog('Extracting failed. Error:'.$ret['error'],'notice');
         }
         else
         {
@@ -265,12 +275,22 @@ class WPvivid_Restore_DB_2
             define(PCLZIP_TEMPORARY_DIR,dirname($root_path));
 
         $archive = new WPvivid_PclZip($file_name);
-        $zip_ret = $archive->extract(WPVIVID_PCLZIP_OPT_BY_NAME,$extract_files,WPVIVID_PCLZIP_OPT_PATH, $root_path,WPVIVID_PCLZIP_OPT_REPLACE_NEWER,WPVIVID_PCLZIP_CB_PRE_EXTRACT,'wpvivid_function_pre_extract_callback',WPVIVID_PCLZIP_OPT_TEMP_FILE_THRESHOLD,16);
+        WPvivid_Extract_Security::begin($root_path);
+        $zip_ret = $archive->extract(WPVIVID_PCLZIP_OPT_BY_NAME,$extract_files,WPVIVID_PCLZIP_OPT_PATH, $root_path,WPVIVID_PCLZIP_OPT_REPLACE_NEWER,WPVIVID_PCLZIP_CB_PRE_EXTRACT,'wpvivid_function_pre_extract_security_callback_2',WPVIVID_PCLZIP_OPT_TEMP_FILE_THRESHOLD,16);
+        $path_validation_failed = WPvivid_Extract_Security::failed();
+        $path_validation_error = WPvivid_Extract_Security::error();
+        WPvivid_Extract_Security::end();
+        if($path_validation_failed)
+        {
+            $zip_ret=false;
+        }
         if(!$zip_ret)
         {
             $ret['result']='failed';
-            $ret['error'] = $archive->errorInfo(true);
-            $this->log->WriteLog('Extracting failed. Error:'.$archive->errorInfo(true),'notice');
+            $ret['error'] = $path_validation_failed
+                ? 'WPVIVID_PCLZIP_ERR_DIRECTORY_RESTRICTION (-21): '.$path_validation_error
+                : $archive->errorInfo(true);
+            $this->log->WriteLog('Extracting failed. Error:'.$ret['error'],'notice');
         }
         else
         {

@@ -35,31 +35,81 @@ class WPvivid_Send_to_site extends WPvivid_Remote
 
     public function plugins_loaded()
     {
-        if (!empty($_POST) &&isset($_POST['wpvivid_action']))
+        if (empty($_POST) || !isset($_POST['wpvivid_action']) || !is_string($_POST['wpvivid_action']))
         {
-            @ini_set( 'display_errors', 0 );
-            if($_POST['wpvivid_action']=='send_to_site_connect')
-            {
-                $this->send_to_site_connect();
-            }
-            else if($_POST['wpvivid_action']=='send_to_site_finish')
-            {
-                $this->send_to_site_finish();
-            }
-            else if($_POST['wpvivid_action']=='send_to_site')
-            {
-                $this->send_to_site();
-            }
-            else if($_POST['wpvivid_action']=='send_to_site_file_status')
-            {
-                $this->send_to_site_file_status();
-            }
-            else if($_POST['wpvivid_action']=='clear_backup_cache')
-            {
-                $this->clear_backup_cache();
-            }
+            return;
+        }
+
+        @ini_set('display_errors', 0);
+
+        $action = sanitize_key(wp_unslash($_POST['wpvivid_action']));
+
+        $allowed_actions = array(
+            'send_to_site_connect',
+            'send_to_site_finish',
+            'send_to_site',
+            'send_to_site_file_status',
+            'clear_backup_cache',
+        );
+
+        if (!in_array($action, $allowed_actions, true))
+        {
+            return;
+        }
+
+        /*
+         * The client version is sent outside the encrypted payload so that an
+         * outdated client can be rejected before RSA decryption is attempted.
+         * This check is only used to provide an upgrade message. It never
+         * replaces request authentication.
+         */
+        $version_check = $this->check_migration_client_version();
+        if ($version_check['result'] !== WPVIVID_SUCCESS)
+        {
+            status_header(426);
+            echo wp_json_encode($version_check);
             die();
         }
+
+        /*
+         * Authentication must happen before RSA decryption.
+         */
+        if (!$this->verify_request_auth($action))
+        {
+            status_header(403);
+
+            echo wp_json_encode(array(
+                'result' => WPVIVID_FAILED,
+                'error'  => 'Migration request authentication failed.',
+            ));
+
+            die();
+        }
+
+        switch ($action)
+        {
+            case 'send_to_site_connect':
+                $this->send_to_site_connect();
+                break;
+
+            case 'send_to_site_finish':
+                $this->send_to_site_finish();
+                break;
+
+            case 'send_to_site':
+                $this->send_to_site();
+                break;
+
+            case 'send_to_site_file_status':
+                $this->send_to_site_file_status();
+                break;
+
+            case 'clear_backup_cache':
+                $this->clear_backup_cache();
+                break;
+        }
+
+        die();
     }
 
     public function init_remotes($remote_collection)
@@ -126,7 +176,7 @@ class WPvivid_Send_to_site extends WPvivid_Remote
                 return $result;
             }
         }
-        $result=$this->upload_finish($task_id);
+        $result=$this->upload_finish($task_id, $files);
         return $result;
         //return array('result' =>WPVIVID_SUCCESS);
     }
@@ -269,7 +319,15 @@ class WPvivid_Send_to_site extends WPvivid_Remote
 
         global $wp_version;
         $args['user-agent'] ='WordPress/' . $wp_version . '; ' . get_bloginfo('url');
-        $args['body']=array('wpvivid_content'=>$data,'wpvivid_action'=>'clear_backup_cache');
+        $args['body'] = $this->get_authenticated_request_body('clear_backup_cache', $data);
+        if ($args['body'] === false)
+        {
+            return array(
+                'result' => WPVIVID_FAILED,
+                'error'  => 'The migration authentication key is invalid.',
+            );
+        }
+
         $args['timeout']=30;
         $response=wp_remote_post($this->options['url'],$args);
 
@@ -326,7 +384,15 @@ class WPvivid_Send_to_site extends WPvivid_Remote
         $data=base64_encode($data);
         global $wp_version;
         $args['user-agent'] ='WordPress/' . $wp_version . '; ' . get_bloginfo('url');
-        $args['body']=array('wpvivid_content'=>$data,'wpvivid_action'=>'send_to_site_connect');
+        $args['body'] = $this->get_authenticated_request_body('send_to_site_connect', $data);
+        if ($args['body'] === false)
+        {
+            return array(
+                'result' => WPVIVID_FAILED,
+                'error'  => 'The migration authentication key is invalid.',
+            );
+        }
+
         $args['timeout']=30;
         $response=wp_remote_post($this->options['url'],$args);
 
@@ -402,7 +468,15 @@ class WPvivid_Send_to_site extends WPvivid_Remote
 
         global $wp_version;
         $args['user-agent'] ='WordPress/' . $wp_version . '; ' . get_bloginfo('url');
-        $args['body']=array('wpvivid_content'=>$data,'wpvivid_action'=>'send_to_site');
+        $args['body'] = $this->get_authenticated_request_body('send_to_site', $data);
+        if ($args['body'] === false)
+        {
+            return array(
+                'result' => WPVIVID_FAILED,
+                'error'  => 'The migration authentication key is invalid.',
+            );
+        }
+
         $args['timeout']=30;
 
         global $wpvivid_plugin;
@@ -455,14 +529,47 @@ class WPvivid_Send_to_site extends WPvivid_Remote
         return $ret;
     }
 
-    public function upload_finish($task_id)
+    public function upload_finish($task_id, $files)
     {
-        $task= new WPvivid_Backup_Task_2($task_id);
-        $task->update_backup_result();
-        $task=WPvivid_taskmanager::get_task($task_id);
+        if (!$this->is_valid_backup_id($task_id) || !is_array($files) || empty($files))
+        {
+            return array(
+                'result'=>WPVIVID_FAILED,
+                'error'=>'Invalid backup file manifest.',
+            );
+        }
+
+        $manifest=array();
+        foreach ($files as $file)
+        {
+            if (!is_string($file) || !is_file($file))
+            {
+                return array(
+                    'result'=>WPVIVID_FAILED,
+                    'error'=>'Failed to build the backup file manifest.',
+                );
+            }
+
+            $file_size=filesize($file);
+            $file_md5=md5_file($file);
+            if ($file_size===false || $file_md5===false)
+            {
+                return array(
+                    'result'=>WPVIVID_FAILED,
+                    'error'=>'Failed to read a backup file.',
+                );
+            }
+
+            $manifest[]=array(
+                'file_name'=>basename($file),
+                'size'=>$file_size,
+                'md5'=>strtolower($file_md5),
+            );
+        }
+
         $json=array();
-        $json['backup']=$task;
         $json['backup_id']=$task_id;
+        $json['files']=$manifest;
         $json=wp_json_encode($json);
 
         $crypt=new WPvivid_crypt(base64_decode($this->options['token']));
@@ -471,7 +578,15 @@ class WPvivid_Send_to_site extends WPvivid_Remote
         $data=base64_encode($data);
         global $wp_version;
         $args['user-agent'] ='WordPress/' . $wp_version . '; ' . get_bloginfo('url');
-        $args['body']=array('wpvivid_content'=>$data,'wpvivid_action'=>'send_to_site_finish');
+        $args['body'] = $this->get_authenticated_request_body('send_to_site_finish', $data);
+        if ($args['body'] === false)
+        {
+            return array(
+                'result' => WPVIVID_FAILED,
+                'error'  => 'The migration authentication key is invalid.',
+            );
+        }
+
         $args['timeout']=30;
         $response=wp_remote_post($this->options['url'],$args);
         if ( is_wp_error( $response ) )
@@ -505,7 +620,6 @@ class WPvivid_Send_to_site extends WPvivid_Remote
             else
             {
                 $ret['result']=WPVIVID_FAILED;
-                //$ret['error']= 'Upload error '.$response['response']['code'].' '.$response['body'];
                 $ret['error']= 'Upload error '.$response['response']['code'];
             }
         }
@@ -527,10 +641,31 @@ class WPvivid_Send_to_site extends WPvivid_Remote
                     die();
                 }
 
-                $crypt = new WPvivid_crypt(base64_decode($option['private_key']));
-                $body = base64_decode($_POST['wpvivid_content']);
+                $private_key = base64_decode($option['private_key'], true);
+
+                if ($private_key === false)
+                {
+                    $ret['result'] = WPVIVID_FAILED;
+                    $ret['error'] = 'Invalid migration private key.';
+                    echo wp_json_encode($ret);
+                    die();
+                }
+
+                $content = wp_unslash($_POST['wpvivid_content']);
+                $body = base64_decode($content, true);
+
+                if ($body === false)
+                {
+                    $ret['result'] = WPVIVID_FAILED;
+                    $ret['error'] = 'Invalid encrypted data.';
+                    echo wp_json_encode($ret);
+                    die();
+                }
+
+                $crypt = new WPvivid_crypt($private_key);
                 $data = $crypt->decrypt_message($body);
-                if (!is_string($data)) {
+                if (!is_string($data))
+                {
                     $ret['result'] = WPVIVID_FAILED;
                     $ret['error'] = 'Data decryption failed.';
                     echo wp_json_encode($ret);
@@ -538,42 +673,78 @@ class WPvivid_Send_to_site extends WPvivid_Remote
                 }
 
                 $params = json_decode($data, 1);
-                if (is_null($params)) {
+                if (is_null($params))
+                {
                     $ret['result'] = WPVIVID_FAILED;
                     $ret['error'] = 'Data decode failed.';
                     echo wp_json_encode($ret);
                     die();
                 }
 
-                if (isset($params['backup_id'])) {
-                    if (WPvivid_Backuplist::get_backup_by_id($params['backup_id']) !== false) {
+                if (!is_array($params))
+                {
+                    $ret['result'] = WPVIVID_FAILED;
+                    $ret['error'] = 'Invalid request data.';
+                    echo wp_json_encode($ret);
+                    die();
+                }
+
+                if (isset($params['backup_id']))
+                {
+                    if (!$this->is_valid_backup_id($params['backup_id']))
+                    {
+                        $ret['result'] = WPVIVID_FAILED;
+                        $ret['error'] = 'Invalid backup ID.';
+                        echo wp_json_encode($ret);
+                        die();
+                    }
+
+                    $backup_id = $params['backup_id'];
+
+                    if (WPvivid_Backuplist::get_backup_by_id($backup_id) !== false)
+                    {
                         $ret['result'] = WPVIVID_FAILED;
                         $ret['error'] = 'The uploading backup already exists in Backups list.';
                         echo wp_json_encode($ret);
-                    } else {
+                        die();
+                    }
+                    else {
                         global $wpvivid_plugin;
                         $wpvivid_plugin->wpvivid_log = new WPvivid_Log();
 
-                        // Prevent path traversal through remote backup_id.
-                        $backup_id = sanitize_file_name($params['backup_id']);
-                        $backup_id = basename($backup_id);
+                        $log_file = $wpvivid_plugin->wpvivid_log->GetSaveLogFolder() . $backup_id . '_backup_log.txt';
 
-                        if (!file_exists($wpvivid_plugin->wpvivid_log->GetSaveLogFolder() . $backup_id . '_backup_log.txt')) {
+                        if (!file_exists($log_file))
+                        {
                             $wpvivid_plugin->wpvivid_log->CreateLogFile($backup_id . '_backup', 'no_folder', 'transfer');
                             $wpvivid_plugin->wpvivid_log->WriteLogHander();
-                        } else {
+                        }
+                        else
+                        {
                             $wpvivid_plugin->wpvivid_log->OpenLogFile($backup_id . '_backup', 'no_folder');
                         }
-
 
                         $wpvivid_plugin->wpvivid_log->WriteLog('Connect site success', 'notice');
                         $ret['result'] = WPVIVID_SUCCESS;
                         echo wp_json_encode($ret);
+                        die();
                     }
-                } else {
+                }
+
+                if (isset($params['test_connect']) && (int)$params['test_connect'] === 1)
+                {
                     $ret['result'] = WPVIVID_SUCCESS;
                     echo wp_json_encode($ret);
+                    die();
                 }
+
+                /*
+                 * Neither a backup connection nor a connection test.
+                 */
+                $ret['result'] = WPVIVID_FAILED;
+                $ret['error'] = 'Invalid migration connection request.';
+                echo wp_json_encode($ret);
+                die();
             }
         }
         catch (Exception $e) {
@@ -628,12 +799,22 @@ class WPvivid_Send_to_site extends WPvivid_Remote
                     die();
                 }
 
-                $wpvivid_plugin->wpvivid_log->OpenLogFile($params['backup_id'].'_backup','no_folder','backup');
+                if (!isset($params['backup_id']) || !$this->is_valid_backup_id($params['backup_id']))
+                {
+                    $ret['result'] = WPVIVID_FAILED;
+                    $ret['error'] = 'Invalid backup ID.';
+                    echo wp_json_encode($ret);
+                    die();
+                }
+
+                $backup_id = $params['backup_id'];
+
+                $wpvivid_plugin->wpvivid_log->OpenLogFile($backup_id.'_backup','no_folder','backup');
                 $wpvivid_plugin->wpvivid_log->WriteLog('start upload.','notice');
                 $dir=WPvivid_Setting::get_backupdir();
 
                 $safe_name = basename($params['name']);
-                $safe_name = preg_replace('/[^a-zA-Z0-9._-]/', '', $safe_name);
+                $safe_name = preg_replace('/[^a-zA-Z0-9._~-]/', '', $safe_name);
                 $allowed_extensions = array('zip', 'gz', 'tar', 'sql');
                 $file_ext = strtolower(pathinfo($safe_name, PATHINFO_EXTENSION));
                 if (!in_array($file_ext, $allowed_extensions, true))
@@ -692,7 +873,6 @@ class WPvivid_Send_to_site extends WPvivid_Remote
                     $wpvivid_plugin->wpvivid_log->WriteLog('continue size:'.filesize($file_path).' size1:'.$params['file_size'],'notice');
                     $ret['result']=WPVIVID_SUCCESS;
                     $ret['op']='continue';
-                    //
                 }
 
                 echo wp_json_encode($ret);
@@ -702,7 +882,6 @@ class WPvivid_Send_to_site extends WPvivid_Remote
         {
             $ret['result']=WPVIVID_FAILED;
             $ret['error']=$e->getMessage();
-            //$wpvivid_plugin->wpvivid_log->WriteLog($e->getMessage(),'error');
             echo wp_json_encode($ret);
             die();
         }
@@ -739,18 +918,46 @@ class WPvivid_Send_to_site extends WPvivid_Remote
                     echo wp_json_encode($ret);
                     die();
                 }
+
+                if (!isset($params['backup_id']) || !$this->is_valid_backup_id($params['backup_id']))
+                {
+                    $ret['result'] = WPVIVID_FAILED;
+                    $ret['error'] = 'Invalid backup ID.';
+                    echo wp_json_encode($ret);
+                    die();
+                }
+
+                if (!isset($params['files']) || !is_array($params['files']) || empty($params['files']))
+                {
+                    $ret['result'] = WPVIVID_FAILED;
+                    $ret['error'] = 'Invalid backup file manifest.';
+                    echo wp_json_encode($ret);
+                    die();
+                }
+
+                $backup_id = $params['backup_id'];
+
                 global $wpvivid_plugin;
                 $wpvivid_plugin->wpvivid_log = new WPvivid_Log();
-                $wpvivid_plugin->wpvivid_log->OpenLogFile($params['backup_id'] . '_backup', 'no_folder', 'backup');
+                $wpvivid_plugin->wpvivid_log->OpenLogFile($backup_id . '_backup', 'no_folder', 'backup');
                 $wpvivid_plugin->wpvivid_log->WriteLog('upload finished', 'notice');
-                if (isset($params['backup']) && isset($params['backup_id']))
+
+                if (!class_exists('WPvivid_Backup_Registration'))
                 {
-                    $list = WPvivid_Setting::get_option('wpvivid_backup_list');
-                    $backup_data = $this->get_backup_data_by_task($params['backup']);
-                    $list[$params['backup_id']] = $backup_data;
-                    WPvivid_Setting::update_option('wpvivid_backup_list', $list);
+                    include_once WPVIVID_PLUGIN_DIR.'/includes/backup-registration/class-wpvivid-backup-registration.php';
                 }
-                $ret['result'] = WPVIVID_SUCCESS;
+
+                $registration=new WPvivid_Backup_Registration();
+                $ret=$registration->register_backup(
+                    $backup_id,
+                    $params['files'],
+                    array(
+                        'type'        =>'Migration',
+                        'log'         =>$wpvivid_plugin->wpvivid_log->log_file,
+                        'verify_md5'  => true,
+                    )
+                );
+
                 echo wp_json_encode($ret);
             }
         }
@@ -763,6 +970,17 @@ class WPvivid_Send_to_site extends WPvivid_Remote
         die();
     }
 
+    /**
+     * Builds backup-list data from the legacy migration task structure.
+     *
+     * The current migration process sends a backup ID and file manifest and
+     * registers the received backup through WPvivid_Backup_Registration.
+     *
+     * @deprecated 0.9.135 No longer used by the current migration process.
+     *
+     * @param array $task Legacy backup task data.
+     * @return array
+     */
     public function get_backup_data_by_task($task)
     {
         global $wpvivid_plugin;
@@ -781,6 +999,17 @@ class WPvivid_Send_to_site extends WPvivid_Remote
         return $backup_data;
     }
 
+    /**
+     * Builds the backup result from the legacy migration task structure.
+     *
+     * This method was used by get_backup_data_by_task() when the complete backup
+     * task was sent to the target site.
+     *
+     * @deprecated 0.9.135 No longer used by the current migration process.
+     *
+     * @param array $task Legacy backup task data.
+     * @return array
+     */
     public function get_backup_result_by_task($task)
     {
         $ret['result']=WPVIVID_SUCCESS;
@@ -832,7 +1061,15 @@ class WPvivid_Send_to_site extends WPvivid_Remote
         $data=base64_encode($data);
         global $wp_version;
         $args['user-agent'] ='WordPress/' . $wp_version . '; ' . get_bloginfo('url');
-        $args['body']=array('wpvivid_content'=>$data,'wpvivid_action'=>'send_to_site_file_status');
+        $args['body'] = $this->get_authenticated_request_body('send_to_site_file_status', $data);
+        if ($args['body'] === false)
+        {
+            return array(
+                'result' => WPVIVID_FAILED,
+                'error'  => 'The migration authentication key is invalid.',
+            );
+        }
+
         $args['timeout']=30;
         $response=wp_remote_post($this->options['url'],$args);
         if ( is_wp_error( $response ) )
@@ -907,9 +1144,17 @@ class WPvivid_Send_to_site extends WPvivid_Remote
                     die();
                 }
 
+                if (!isset($params['backup_id']) || !$this->is_valid_backup_id($params['backup_id']))
+                {
+                    $ret['result'] = WPVIVID_FAILED;
+                    $ret['error'] = 'Invalid backup ID.';
+                    echo wp_json_encode($ret);
+                    die();
+                }
+
                 $dir = WPvivid_Setting::get_backupdir();
                 $safe_name = basename($params['name']);
-                $safe_name = preg_replace('/[^a-zA-Z0-9._-]/', '', $safe_name);
+                $safe_name = preg_replace('/[^a-zA-Z0-9._~-]/', '', $safe_name);
                 $allowed_extensions = array('zip', 'gz', 'tar', 'sql');
                 $file_ext = strtolower(pathinfo($safe_name, PATHINFO_EXTENSION));
                 if (!in_array($file_ext, $allowed_extensions, true))
@@ -924,7 +1169,7 @@ class WPvivid_Send_to_site extends WPvivid_Remote
 
                 if (!file_exists($file_path))
                 {
-                    $file_path = WP_CONTENT_DIR . DIRECTORY_SEPARATOR . $dir . DIRECTORY_SEPARATOR . $params['name'];
+                    $file_path = WP_CONTENT_DIR . DIRECTORY_SEPARATOR . $dir . DIRECTORY_SEPARATOR . $safe_name;
                     $rename = false;
                     $offset=false;
                 }
@@ -999,9 +1244,19 @@ class WPvivid_Send_to_site extends WPvivid_Remote
                     die();
                 }
 
+                if (!isset($params['backup_id']) || !$this->is_valid_backup_id($params['backup_id']))
+                {
+                    $ret['result'] = WPVIVID_FAILED;
+                    $ret['error'] = 'Invalid backup ID.';
+                    echo wp_json_encode($ret);
+                    die();
+                }
+
+                $backup_id = $params['backup_id'];
+
                 global $wpvivid_plugin;
                 $wpvivid_plugin->wpvivid_log = new WPvivid_Log();
-                $wpvivid_plugin->wpvivid_log->OpenLogFile($params['backup_id'] . '_backup', 'no_folder', 'backup');
+                $wpvivid_plugin->wpvivid_log->OpenLogFile($backup_id . '_backup', 'no_folder', 'backup');
 
                 $dir=WPvivid_Setting::get_backupdir();
 
@@ -1026,15 +1281,10 @@ class WPvivid_Send_to_site extends WPvivid_Remote
                                         if ($id =self::get_wpvivid_backup_id($filename))
                                         {
                                             $white_label_id = str_replace(apply_filters('wpvivid_white_label_file_prefix', 'wpvivid'), 'wpvivid', $id);
-                                            if(isset($params['backup_id']))
+                                            if($id === $backup_id || $white_label_id === $backup_id)
                                             {
-                                                $clear_backup_id = sanitize_text_field($params['backup_id']);
-
-                                                if($id === $clear_backup_id || $white_label_id === $clear_backup_id)
-                                                {
-                                                    $wpvivid_plugin->wpvivid_log->WriteLog('Clear backup file: '.$backup_path.$filename, 'notice');
-                                                    @wp_delete_file($backup_path.$filename);
-                                                }
+                                                $wpvivid_plugin->wpvivid_log->WriteLog('Clear backup file: '.$backup_path.$filename, 'notice');
+                                                @wp_delete_file($backup_path.$filename);
                                             }
                                         }
                                     }
@@ -1084,5 +1334,164 @@ class WPvivid_Send_to_site extends WPvivid_Remote
         else {
             return false;
         }
+    }
+
+    private function get_authenticated_request_body($action, $content)
+    {
+        if (!isset($this->options['auth_key'], $this->options['protocol_version']) ||
+            !is_string($this->options['auth_key']) ||
+            preg_match('/\A[a-f0-9]{64}\z/', $this->options['auth_key']) !== 1 ||
+            (int)$this->options['protocol_version'] !== 2
+        )
+        {
+            return false;
+        }
+
+        $signature = hash_hmac(
+            'sha256',
+            $action . "\n" . $content,
+            $this->options['auth_key']
+        );
+
+        return array(
+            'wpvivid_content'          => $content,
+            'wpvivid_action'           => $action,
+            'wpvivid_protocol_version' => 2,
+            'wpvivid_client_type'      => 'free',
+            'wpvivid_client_version'   => defined('WPVIVID_PLUGIN_VERSION') ? WPVIVID_PLUGIN_VERSION : '',
+            'wpvivid_signature'        => $signature,
+        );
+    }
+
+    private function check_migration_client_version()
+    {
+        if (!isset($_POST['wpvivid_client_type'], $_POST['wpvivid_client_version']) ||
+            !is_string($_POST['wpvivid_client_type']) ||
+            !is_string($_POST['wpvivid_client_version']))
+        {
+            return array(
+                'result'     => WPVIVID_FAILED,
+                'error_code' => 'migration_client_upgrade_required',
+                'error'      => __('The source site is using an outdated version of WPvivid. Please update the WPvivid plugin on the source site, generate a new migration key, and try again.', 'wpvivid-backuprestore'),
+            );
+        }
+
+        $client_type = sanitize_key(wp_unslash($_POST['wpvivid_client_type']));
+        $client_version = sanitize_text_field(wp_unslash($_POST['wpvivid_client_version']));
+
+        if ($client_type === 'free')
+        {
+            $minimum_version = '0.9.135';
+            $plugin_name = 'WPvivid Backup & Migration';
+        }
+        else if ($client_type === 'pro')
+        {
+            $minimum_version = '2.2.52';
+            $plugin_name = 'WPvivid Backup Pro';
+        }
+        else
+        {
+            return array(
+                'result'     => WPVIVID_FAILED,
+                'error_code' => 'invalid_migration_client',
+                'error'      => __('Invalid migration client.', 'wpvivid-backuprestore'),
+            );
+        }
+
+        if (!$this->is_supported_migration_client_version($client_version, $minimum_version))
+        {
+            return array(
+                'result'          => WPVIVID_FAILED,
+                'error_code'      => 'migration_client_upgrade_required',
+                'client_type'     => $client_type,
+                'client_version'  => $client_version,
+                'minimum_version' => $minimum_version,
+                'error'           => sprintf(
+                    __('The source site is using %1$s version %2$s. Please update it to version %3$s or later, generate a new migration key, and try again.', 'wpvivid-backuprestore'),
+                    $plugin_name,
+                    $client_version !== '' ? $client_version : __('unknown', 'wpvivid-backuprestore'),
+                    $minimum_version
+                ),
+            );
+        }
+
+        return array('result' => WPVIVID_SUCCESS);
+    }
+
+    private function is_supported_migration_client_version($client_version, $minimum_version)
+    {
+        if (!is_string($client_version) ||
+            preg_match('/\A[0-9]+(?:\.[0-9]+){1,3}(?:[-+][a-zA-Z0-9.-]+)?\z/', $client_version) !== 1)
+        {
+            return false;
+        }
+
+        if (version_compare($client_version, $minimum_version, '>='))
+        {
+            return true;
+        }
+
+        /*
+         * Allow pre-release builds from the first supported release line,
+         * for example 0.9.135-beta2 and 2.2.52-beta1.
+         */
+        return strpos($client_version, $minimum_version . '-') === 0;
+    }
+
+    private function verify_request_auth($action)
+    {
+        if (!isset($_POST['wpvivid_content'], $_POST['wpvivid_signature'], $_POST['wpvivid_protocol_version']) ||
+            !is_string($_POST['wpvivid_content']) ||
+            !is_string($_POST['wpvivid_signature']))
+        {
+            return false;
+        }
+
+        if (absint($_POST['wpvivid_protocol_version']) !== 2)
+        {
+            return false;
+        }
+
+        $option = get_option('wpvivid_api_token', array());
+
+        if (empty($option) || !isset($option['auth_key']) ||
+            !is_string($option['auth_key']) ||
+            preg_match('/\A[a-f0-9]{64}\z/', $option['auth_key']) !== 1)
+        {
+            return false;
+        }
+
+        if (isset($option['expires']) && (int)$option['expires'] !== 0 && (int)$option['expires'] < time())
+        {
+            return false;
+        }
+
+        $content = wp_unslash($_POST['wpvivid_content']);
+
+        $signature = sanitize_text_field(wp_unslash($_POST['wpvivid_signature']));
+
+        if (preg_match('/\A[a-f0-9]{64}\z/', $signature) !== 1)
+        {
+            return false;
+        }
+
+        $expected_signature = hash_hmac(
+            'sha256',
+            $action . "\n" . $content,
+            $option['auth_key']
+        );
+
+        return hash_equals($expected_signature, $signature);
+    }
+
+    private function is_valid_backup_id($backup_id)
+    {
+        return is_string($backup_id) &&
+            $backup_id !== '' &&
+            $backup_id !== '0' &&
+            preg_match(
+                '/\A[a-zA-Z0-9_-]+\z/',
+                $backup_id
+            ) === 1;
     }
 }

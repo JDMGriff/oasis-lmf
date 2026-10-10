@@ -5,6 +5,8 @@ if (!defined('WPVIVID_PLUGIN_DIR'))
     die;
 }
 
+require_once WPVIVID_PLUGIN_DIR . '/includes/class-wpvivid-extract-security.php';
+
 class WPvivid_Restore_File_2
 {
     public $log;
@@ -75,34 +77,14 @@ class WPvivid_Restore_File_2
                 $file_name=$root_path.$file['file_name'];
             }
 
-
-            $root_path = '';
-            if (isset($file['options']['root']))
+            $root_ret = $this->get_restore_root_path($sub_task['type'], $file['options']);
+            if ($root_ret['result'] != 'success')
             {
-                $root_path = $this->transfer_path(get_home_path() . $file['options']['root']);
+                $this->log->WriteLog($root_ret['error'], 'error');
+                return $root_ret;
             }
-            else if (isset($file['options']['root_flag']))
-            {
-                if ($file['options']['root_flag'] == WPVIVID_BACKUP_ROOT_WP_CONTENT)
-                {
-                    $root_path = $this->transfer_path(WP_CONTENT_DIR);
-                }
-                else if ($file['options']['root_flag'] == WPVIVID_BACKUP_ROOT_CUSTOM)
-                {
-                    $root_path = $this->transfer_path(WP_CONTENT_DIR . DIRECTORY_SEPARATOR . WPvivid_Setting::get_backupdir());
-                }
-                else if ($file['options']['root_flag'] == WPVIVID_BACKUP_ROOT_WP_ROOT)
-                {
-                    $root_path = $this->transfer_path(ABSPATH);
-                }
-                else if($file['options']['root_flag'] == WPVIVID_BACKUP_ROOT_WP_UPLOADS)
-                {
-                    $upload_dir = wp_upload_dir();
-                    $upload_path = $upload_dir['basedir'];
-
-                    $root_path = $this->transfer_path($upload_path);
-                }
-            }
+            $root_path = $root_ret['path'];
+            $restricted_path = $root_ret['restricted_path'];
 
             if($sub_task['restore_reset'])
             {
@@ -136,7 +118,7 @@ class WPvivid_Restore_File_2
 
                 $this->update_sub_task($sub_task);
                 $this->log->WriteLog('Extracting file:'.$file_name,'notice');
-                $ret=$this->extract($file_name,untrailingslashit($root_path),$sub_task['options']);
+                $ret=$this->extract($file_name,untrailingslashit($root_path),$sub_task['options'],untrailingslashit($restricted_path));
                 if($ret['result']!='success')
                 {
                     return $ret;
@@ -158,7 +140,7 @@ class WPvivid_Restore_File_2
                 $sub_task['unzip_file']['last_unzip_file_index']=$start;
                 $this->update_sub_task($sub_task);
                 $this->log->WriteLog('Extracting file:'.basename($file_name).' index:'.$start,'notice');
-                $ret=$this->extract_by_index($file_name,untrailingslashit($root_path),$start,$start+$unzip_files_pre_request,$sub_task['options']);
+                $ret=$this->extract_by_index($file_name,untrailingslashit($root_path),$start,$start+$unzip_files_pre_request,$sub_task['options'],untrailingslashit($restricted_path));
                 if($ret['result']!='success')
                 {
                     return $ret;
@@ -193,6 +175,202 @@ class WPvivid_Restore_File_2
         $ret['result']='success';
         $ret['sub_task']=$sub_task;
         return $ret;
+    }
+
+    private function get_restore_restricted_path($file_type, $root_flag, $root_path)
+    {
+        if ($root_flag === WPVIVID_BACKUP_ROOT_WP_CONTENT)
+        {
+            $relative_paths = array(
+                'themes'     => 'themes',
+                'plugin'     => 'plugins',
+                'upload'     => 'uploads',
+                'mu-plugins' => 'mu-plugins',
+                'wp-content' => '',
+            );
+
+            if (!array_key_exists($file_type, $relative_paths))
+            {
+                return array(
+                    'result' => 'failed',
+                    'error'  => 'This file type cannot be restored to the wp-content directory. Please check the backup components or contact support for assistance.'
+                );
+            }
+
+            $relative_path = $relative_paths[$file_type];
+
+            if ($relative_path === '')
+            {
+                $restricted_path = WP_CONTENT_DIR;
+            }
+            else
+            {
+                $restricted_path = WP_CONTENT_DIR . DIRECTORY_SEPARATOR . $relative_path;
+            }
+
+            return array('result' => 'success', 'path' => $restricted_path);
+        }
+
+        if ($root_flag === WPVIVID_BACKUP_ROOT_WP_ROOT)
+        {
+            if ($file_type === 'wp-content')
+            {
+                return array(
+                    'result' => 'success',
+                    'path'   => WP_CONTENT_DIR
+                );
+            }
+
+            if ($file_type === 'wp-core')
+            {
+                return array(
+                    'result' => 'success',
+                    'path'   => ABSPATH
+                );
+            }
+
+            if ($file_type === 'custom')
+            {
+                return array(
+                    'result' => 'success',
+                    'path'   => ABSPATH
+                );
+            }
+
+            return array(
+                'result' => 'failed',
+                'error'  => 'This file type cannot be restored to the root directory. Please check the backup components or contact support for assistance.'
+            );
+        }
+
+        if ($root_flag === WPVIVID_BACKUP_ROOT_UPLOADS_RELATIVE)
+        {
+            if ($file_type !== 'upload')
+            {
+                return array(
+                    'result' => 'failed',
+                    'error'  => 'The file type does not match an uploads-related backup. Please upload a valid media/uploads backup or contact support for assistance. '
+                );
+            }
+
+            return array(
+                'result' => 'success',
+                'path'   => $root_path
+            );
+        }
+
+        return array(
+            'result' => 'failed',
+            'error'  => 'The backup has an unsupported directory structure. Please use a newer backup or contact support for assistance.'
+        );
+    }
+
+    /**
+     * Resolve the extraction root from trusted restore semantics, not directly
+     * from package-controlled wpvivid_package_info.json data.
+     */
+    public function get_restore_root_path($file_type, $options)
+    {
+        if (!is_string($file_type) || $file_type === '')
+        {
+            return array('result' => 'failed', 'error'  => 'The backup type could not be recognized. Please upload a valid WPvivid backup file or contact support for assistance.');
+        }
+
+        if (!is_array($options))
+        {
+            return array('result' => 'failed', 'error'  => 'The backup package information is missing or corrupted. Please try uploading the backup file again or contact support for assistance.');
+        }
+
+        $allowed_flags = array(
+            'themes'     => array(WPVIVID_BACKUP_ROOT_WP_CONTENT),
+            'plugin'     => array(WPVIVID_BACKUP_ROOT_WP_CONTENT),
+            'upload'     => array(WPVIVID_BACKUP_ROOT_WP_CONTENT, WPVIVID_BACKUP_ROOT_UPLOADS_RELATIVE),
+            'wp-content' => array(WPVIVID_BACKUP_ROOT_WP_CONTENT, WPVIVID_BACKUP_ROOT_WP_ROOT),
+            'wp-core'    => array(WPVIVID_BACKUP_ROOT_WP_ROOT),
+            'mu-plugins' => array(WPVIVID_BACKUP_ROOT_WP_CONTENT),
+            'custom'     => array(WPVIVID_BACKUP_ROOT_WP_ROOT),
+        );
+
+        if (!isset($allowed_flags[$file_type]))
+        {
+            return array('result'=>'failed', 'error'=>'This backup type is not supported for restore. Please upload a valid backup or contact support for assistance.');
+        }
+
+        if (isset($options['root_flag']))
+        {
+            $root_flag = $options['root_flag'];
+        }
+        else if (isset($options['root']))
+        {
+            if (!is_string($options['root']))
+            {
+                return array('result' => 'failed', 'error'  => 'The restore path recorded in this older backup is invalid. Please try restoring with a newer backup or contact support for assistance.');
+            }
+
+            $legacy_root = trim(str_replace('\\', '/', $options['root']), '/');
+            if ($legacy_root === 'wp-content')
+            {
+                $root_flag = WPVIVID_BACKUP_ROOT_WP_CONTENT;
+            }
+            else if ($legacy_root === '')
+            {
+                $root_flag = WPVIVID_BACKUP_ROOT_WP_ROOT;
+            }
+            else
+            {
+                return array('result'=>'failed', 'error'=>'The restore path recorded in this older backup is invalid. Please try restoring with a newer backup or contact support for assistance.');
+            }
+        }
+        else
+        {
+            return array('result'=>'failed', 'error'=>'The backup is missing path information. Please upload a valid backup file or contact support for assistance.');
+        }
+
+        if (!in_array($root_flag, $allowed_flags[$file_type], true))
+        {
+            return array('result'=>'failed', 'error'=>'The file type does not match its restore location. Please create a new backup or contact support for assistance.');
+        }
+
+        if ($root_flag === WPVIVID_BACKUP_ROOT_WP_CONTENT)
+        {
+            $root_path = WP_CONTENT_DIR;
+        }
+        else if ($root_flag === WPVIVID_BACKUP_ROOT_WP_ROOT)
+        {
+            $root_path = ABSPATH;
+        }
+        else if ($root_flag === WPVIVID_BACKUP_ROOT_UPLOADS_RELATIVE)
+        {
+            $upload_dir = wp_get_upload_dir();
+
+            if (empty($upload_dir['basedir']) || !empty($upload_dir['error']))
+            {
+                return array(
+                    'result' => 'failed',
+                    'error'  => 'Unable to determine the uploads directory. Please check your uploads settings or contact support for assistance.'
+                );
+            }
+
+            $root_path = $upload_dir['basedir'];
+        }
+        else
+        {
+            return array(
+                'result' => 'failed',
+                'error'  => 'The restore path is not supported. Please use a newer backup or contact support for assistance.'
+            );
+        }
+
+        $restricted_ret = $this->get_restore_restricted_path($file_type, $root_flag, $root_path);
+
+        if ($restricted_ret['result'] !== 'success')
+        {
+            return $restricted_ret;
+        }
+
+        $restricted_path = $restricted_ret['path'];
+
+        return array('result' => 'success', 'path' => $this->transfer_path($root_path), 'restricted_path' => $this->transfer_path($restricted_path));
     }
 
     public function restore_core($sub_task,$backup_id)
@@ -274,7 +452,7 @@ class WPvivid_Restore_File_2
             $this->update_sub_task($sub_task);
             $this->log->WriteLog('Extracting file:'.basename($file_name),'notice');
 
-            $ret=$this->extract($file_name,untrailingslashit($root_path),$sub_task['options']);
+            $ret=$this->extract($file_name,untrailingslashit($root_path),$sub_task['options'],untrailingslashit($root_path));
             if($ret['result']!='success')
             {
                 return $ret;
@@ -296,7 +474,7 @@ class WPvivid_Restore_File_2
         return $ret;
     }
 
-    public function extract($file_name,$root_path,$option)
+    public function extract($file_name,$root_path,$option,$restricted_path = false)
     {
         if (!class_exists('WPvivid_PclZip'))
             include_once WPVIVID_PLUGIN_DIR . '/includes/zip/class-wpvivid-pclzip.php';
@@ -309,13 +487,31 @@ class WPvivid_Restore_File_2
         if(!defined('PCLZIP_TEMPORARY_DIR'))
             define(PCLZIP_TEMPORARY_DIR,dirname($root_path));
 
+        WPvivid_Extract_Security::begin($restricted_path);
         $archive = new WPvivid_PclZip($file_name);
-        $zip_ret = $archive->extract(WPVIVID_PCLZIP_OPT_PATH, $root_path,WPVIVID_PCLZIP_OPT_REPLACE_NEWER,WPVIVID_PCLZIP_CB_PRE_EXTRACT,'wpvivid_function_pre_extract_callback_2',WPVIVID_PCLZIP_OPT_TEMP_FILE_THRESHOLD,16);
+        $zip_ret = $archive->extract(WPVIVID_PCLZIP_OPT_PATH, $root_path, WPVIVID_PCLZIP_OPT_REPLACE_NEWER, WPVIVID_PCLZIP_CB_PRE_EXTRACT, 'wpvivid_function_pre_extract_callback_2', WPVIVID_PCLZIP_OPT_TEMP_FILE_THRESHOLD, 16);
+        $path_validation_failed = WPvivid_Extract_Security::failed();
+        $path_validation_error = WPvivid_Extract_Security::error();
+        WPvivid_Extract_Security::end();
+
+        if ($path_validation_failed)
+        {
+            $zip_ret = false;
+        }
+
         if(!$zip_ret)
         {
             $ret['result']='failed';
-            $ret['error'] = $archive->errorInfo(true);
-            $this->log->WriteLog('Extracting failed. Error:'.$archive->errorInfo(true),'notice');
+            if ($path_validation_failed && $path_validation_error !== '')
+            {
+                $ret['error'] = 'WPVIVID_PCLZIP_ERR_DIRECTORY_RESTRICTION (-21): '. $path_validation_error;
+            }
+            else
+            {
+                $ret['error'] = $archive->errorInfo(true);
+            }
+
+            $this->log->WriteLog('Extracting failed. Error: '.$ret['error'],'notice');
         }
         else
         {
@@ -337,13 +533,31 @@ class WPvivid_Restore_File_2
         if(!defined('PCLZIP_TEMPORARY_DIR'))
             define(PCLZIP_TEMPORARY_DIR,dirname($root_path));
 
+        WPvivid_Extract_Security::begin($root_path);
         $archive = new WPvivid_PclZip($file_name);
         $zip_ret = $archive->extract(WPVIVID_PCLZIP_OPT_BY_NAME,$extract_files,WPVIVID_PCLZIP_OPT_PATH, $root_path,WPVIVID_PCLZIP_OPT_REPLACE_NEWER,WPVIVID_PCLZIP_CB_PRE_EXTRACT,'wpvivid_function_pre_extract_callback_2',WPVIVID_PCLZIP_OPT_TEMP_FILE_THRESHOLD,16);
+        $path_validation_failed = WPvivid_Extract_Security::failed();
+        $path_validation_error = WPvivid_Extract_Security::error();
+        WPvivid_Extract_Security::end();
+
+        if ($path_validation_failed)
+        {
+            $zip_ret = false;
+        }
+
         if(!$zip_ret)
         {
             $ret['result']='failed';
-            $ret['error'] = $archive->errorInfo(true);
-            $this->log->WriteLog('Extracting failed. Error:'.$archive->errorInfo(true),'notice');
+            if ($path_validation_failed && $path_validation_error !== '')
+            {
+                $ret['error'] = 'WPVIVID_PCLZIP_ERR_DIRECTORY_RESTRICTION (-21): '. $path_validation_error;
+            }
+            else
+            {
+                $ret['error'] = $archive->errorInfo(true);
+            }
+
+            $this->log->WriteLog('Extracting failed. Error: '.$ret['error'],'notice');
         }
         else
         {
@@ -352,7 +566,7 @@ class WPvivid_Restore_File_2
         return $ret;
     }
 
-    public function extract_by_index($file_name,$root_path,$start,$end,$option)
+    public function extract_by_index($file_name,$root_path,$start,$end,$option,$restricted_path = false)
     {
         $index=$start.'-'.$end;
 
@@ -367,13 +581,31 @@ class WPvivid_Restore_File_2
         if(!defined('PCLZIP_TEMPORARY_DIR'))
             define(PCLZIP_TEMPORARY_DIR,dirname($root_path));
 
+        WPvivid_Extract_Security::begin($restricted_path);
         $archive = new WPvivid_PclZip($file_name);
-        $zip_ret = $archive->extractByIndex($index,WPVIVID_PCLZIP_OPT_PATH, $root_path,WPVIVID_PCLZIP_OPT_REPLACE_NEWER,WPVIVID_PCLZIP_CB_PRE_EXTRACT,'wpvivid_function_pre_extract_callback_2',WPVIVID_PCLZIP_OPT_TEMP_FILE_THRESHOLD,16);
+        $zip_ret = $archive->extractByIndex($index, WPVIVID_PCLZIP_OPT_PATH, $root_path, WPVIVID_PCLZIP_OPT_REPLACE_NEWER, WPVIVID_PCLZIP_CB_PRE_EXTRACT, 'wpvivid_function_pre_extract_callback_2', WPVIVID_PCLZIP_OPT_TEMP_FILE_THRESHOLD, 16);
+        $path_validation_failed = WPvivid_Extract_Security::failed();
+        $path_validation_error = WPvivid_Extract_Security::error();
+        WPvivid_Extract_Security::end();
+
+        if ($path_validation_failed)
+        {
+            $zip_ret = false;
+        }
+
         if(!$zip_ret)
         {
             $ret['result']='failed';
-            $ret['error'] = $archive->errorInfo(true);
-            $this->log->WriteLog('Extracting failed. Error:'.$archive->errorInfo(true),'notice');
+            if ($path_validation_failed && $path_validation_error !== '')
+            {
+                $ret['error'] = 'WPVIVID_PCLZIP_ERR_DIRECTORY_RESTRICTION (-21): '. $path_validation_error;
+            }
+            else
+            {
+                $ret['error'] = $archive->errorInfo(true);
+            }
+
+            $this->log->WriteLog('Extracting failed. Error: '.$ret['error'],'notice');
         }
         else
         {
@@ -643,6 +875,19 @@ class WPvivid_Restore_File_2
 
 function wpvivid_function_pre_extract_callback_2($p_event, &$p_header)
 {
+    $final_filename = isset($p_header['filename']) ? $p_header['filename'] : '';
+
+    // Package metadata is read separately and must never be restored.
+    if (basename(str_replace('\\', '/', $final_filename)) === 'wpvivid_package_info.json')
+    {
+        return 0;
+    }
+
+    if (!WPvivid_Extract_Security::validate($final_filename))
+    {
+        return 2;
+    }
+
     $plugins = substr(WP_PLUGIN_DIR, strpos(WP_PLUGIN_DIR, 'wp-content/'));
 
     if ( isset( $GLOBALS['wpvivid_restore_option'] ) )
@@ -708,11 +953,6 @@ function wpvivid_function_pre_extract_callback_2($p_event, &$p_header)
     }
 
     if(strpos($p_header['filename'],'wp-config.php')!==false)
-    {
-        return 0;
-    }
-
-    if(strpos($p_header['filename'],'wpvivid_package_info.json')!==false)
     {
         return 0;
     }

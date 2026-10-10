@@ -12,6 +12,108 @@ class WPvivid_Isolate_Files
 
     }
 
+    private function normalize_relative_path($path)
+    {
+        if(!is_string($path) || $path==='' || strpos($path, "\0")!==false)
+        {
+            return false;
+        }
+
+        $path=str_replace('\\','/',$path);
+        if($path==='' || $path[0]==='/' || preg_match('#^[a-zA-Z][a-zA-Z0-9+.-]*:#',$path))
+        {
+            return false;
+        }
+
+        $parts=explode('/',$path);
+        foreach($parts as $part)
+        {
+            if($part==='' || $part==='.' || $part==='..')
+            {
+                return false;
+            }
+        }
+
+        return implode(DIRECTORY_SEPARATOR,$parts);
+    }
+
+    private function is_path_inside($path,$root)
+    {
+        $path=wp_normalize_path($path);
+        $root=trailingslashit(wp_normalize_path($root));
+
+        if(DIRECTORY_SEPARATOR==='\\')
+        {
+            $path=strtolower($path);
+            $root=strtolower($root);
+        }
+
+        return strpos($path,$root)===0;
+    }
+
+    private function get_existing_path($root,$relative_path)
+    {
+        $relative_path=$this->normalize_relative_path($relative_path);
+        $real_root=realpath($root);
+        if($relative_path===false || $real_root===false)
+        {
+            return false;
+        }
+
+        $candidate=$real_root.DIRECTORY_SEPARATOR.$relative_path;
+        $real_candidate=realpath($candidate);
+        if($real_candidate===false || !$this->is_path_inside($real_candidate,$real_root))
+        {
+            return false;
+        }
+
+        return $candidate;
+    }
+
+    private function get_safe_destination($root,$relative_path)
+    {
+        $relative_path=$this->normalize_relative_path($relative_path);
+        $real_root=realpath($root);
+        if($relative_path===false || $real_root===false)
+        {
+            return false;
+        }
+
+        $parts=explode(DIRECTORY_SEPARATOR,$relative_path);
+        array_pop($parts);
+        $current=$real_root;
+
+        foreach($parts as $part)
+        {
+            $current.=DIRECTORY_SEPARATOR.$part;
+            if(file_exists($current) || is_link($current))
+            {
+                $real_current=realpath($current);
+                if($real_current===false || !is_dir($real_current) || !$this->is_path_inside($real_current,$real_root))
+                {
+                    return false;
+                }
+                $current=$real_current;
+            }
+            else if(!@mkdir($current,0777) && !is_dir($current))
+            {
+                return false;
+            }
+        }
+
+        $candidate=$real_root.DIRECTORY_SEPARATOR.$relative_path;
+        if(file_exists($candidate) || is_link($candidate))
+        {
+            $real_candidate=realpath($candidate);
+            if($real_candidate===false || !$this->is_path_inside($real_candidate,$real_root))
+            {
+                return false;
+            }
+        }
+
+        return $candidate;
+    }
+
     public function check_folder()
     {
         if(!is_dir(WP_CONTENT_DIR.DIRECTORY_SEPARATOR.WPVIVID_UPLOADS_ISO_DIR))
@@ -34,17 +136,14 @@ class WPvivid_Isolate_Files
 
         foreach ($files as $file)
         {
-            $from=$root_path.$file;
-
-            $to=$iso_dir.$file;
-
-            if(file_exists($from))
+            $from=$this->get_existing_path($root_path,$file);
+            if($from!==false && file_exists($from))
             {
-                if (!is_dir(dirname($to)))
+                $to=$this->get_safe_destination($iso_dir,$file);
+                if($to!==false)
                 {
-                    mkdir(dirname($to), 0777, true);
+                    @rename($from,$to);
                 }
-                @rename($from,$to);
             }
         }
         $ret['result']='success';
@@ -124,8 +223,13 @@ class WPvivid_Isolate_Files
         }
         else
         {
+            $safe_folder=$this->normalize_relative_path($folder_ex);
+            if($safe_folder===false)
+            {
+                return array();
+            }
             $files=array();
-            $this->scan_list_uploaded_files($files,$root.DIRECTORY_SEPARATOR.$folder_ex,$root,$folder_ex,$search);
+            $this->scan_list_uploaded_files($files,$root.DIRECTORY_SEPARATOR.$safe_folder,$root,$safe_folder,$search);
             $result=$files;
         }
 
@@ -270,7 +374,12 @@ class WPvivid_Isolate_Files
         $delete_media_when_delete_file=get_option('wpvivid_uc_delete_media_when_delete_file',true);
         foreach ($files as $file)
         {
-            @wp_delete_file($root.DIRECTORY_SEPARATOR.$file);
+            $path=$this->get_existing_path($root,$file);
+            if($path===false || !is_file($path))
+            {
+                continue;
+            }
+            @wp_delete_file($path);
 
             if($delete_media_when_delete_file)
             {
@@ -281,9 +390,6 @@ class WPvivid_Isolate_Files
                 }
             }
         }
-
-
-
     }
 
     public function delete_files_ex($files)
@@ -292,7 +398,16 @@ class WPvivid_Isolate_Files
         $delete_media_when_delete_file=get_option('wpvivid_uc_delete_media_when_delete_file',true);
         foreach ($files as $file)
         {
-            @wp_delete_file($root.DIRECTORY_SEPARATOR.$file['path']);
+            if(!isset($file['path']))
+            {
+                continue;
+            }
+            $path=$this->get_existing_path($root,$file['path']);
+            if($path===false || !is_file($path))
+            {
+                continue;
+            }
+            @wp_delete_file($path);
 
             if($delete_media_when_delete_file)
             {
@@ -309,21 +424,23 @@ class WPvivid_Isolate_Files
     {
         global $wpdb;
 
-        $file=basename($file);
+        $file=basename((string)$file);
 
-        $sql = "SELECT post_id
+        $sql = $wpdb->prepare(
+            "SELECT post_id
 			FROM {$wpdb->postmeta}
-			WHERE meta_key = '_wp_attachment_metadata'
-			AND meta_value LIKE '%$file%'";
-
+			WHERE meta_key = %s
+			AND meta_value LIKE %s",
+            '_wp_attachment_metadata',
+            '%'.$wpdb->esc_like($file).'%'
+        );
         $ret = $wpdb->get_var( $sql );
-
         if(!$ret)
         {
             $sql = $wpdb->prepare( "SELECT post_id
 			FROM {$wpdb->postmeta}
-			WHERE meta_key = '_wp_attached_file'
-			AND meta_value = %s", $file
+			WHERE meta_key = %s
+			AND meta_value = %s", '_wp_attached_file', $file
             );
             $ret = $wpdb->get_var( $sql );
         }
@@ -339,17 +456,14 @@ class WPvivid_Isolate_Files
 
         foreach ($files as $file)
         {
-            $from=$root_path.$file;
-
-            $to=$upload_path.$file;
-
-            if(file_exists($from))
+            $from=$this->get_existing_path($root_path,$file);
+            if($from!==false && file_exists($from))
             {
-                if (!is_dir(dirname($to)))
+                $to=$this->get_safe_destination($upload_path,$file);
+                if($to!==false)
                 {
-                    mkdir(dirname($to), 0777, true);
+                    @rename($from,$to);
                 }
-                @rename($from,$to);
             }
         }
         $ret['result']='success';
@@ -365,17 +479,18 @@ class WPvivid_Isolate_Files
 
         foreach ($files as $file)
         {
-            $from=$root_path.$file['path'];
-
-            $to=$upload_path.$file['path'];
-
-            if(file_exists($from))
+            if(!isset($file['path']))
             {
-                if (!is_dir(dirname($to)))
+                continue;
+            }
+            $from=$this->get_existing_path($root_path,$file['path']);
+            if($from!==false && file_exists($from))
+            {
+                $to=$this->get_safe_destination($upload_path,$file['path']);
+                if($to!==false)
                 {
-                    mkdir(dirname($to), 0777, true);
+                    @rename($from,$to);
                 }
-                @rename($from,$to);
             }
         }
         $ret['result']='success';

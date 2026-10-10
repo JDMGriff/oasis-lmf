@@ -16,7 +16,7 @@ class WPvivid_Backuplist
             {
                 foreach ($list as $k=>$backup)
                 {
-                    if ($id == $k)
+                    if ($id === $k)
                     {
                         return $backup;
                     }
@@ -37,7 +37,7 @@ class WPvivid_Backuplist
             {
                 foreach ($list as $k=>$backup)
                 {
-                    if ($backup_id == $k)
+                    if ($backup_id === $k)
                     {
                         $list[$backup_id]=$backup_new;
                         WPvivid_Setting::update_option($list_name,$list);
@@ -76,7 +76,7 @@ class WPvivid_Backuplist
         $list = WPvivid_Setting::get_option('wpvivid_backup_list');
         foreach ($list as $k=>$backup)
         {
-            if ($id == $k)
+            if ($id === $k)
             {
                 $ret['list_name'] = 'wpvivid_backup_list';
                 $ret['list_data'] = $list;
@@ -99,7 +99,7 @@ class WPvivid_Backuplist
         $list = WPvivid_Setting::get_option('wpvivid_backup_list');
         foreach ($list as $k=>$backup)
         {
-            if ($key == $k)
+            if ($key === $k)
             {
                 return $backup;
             }
@@ -155,7 +155,7 @@ class WPvivid_Backuplist
             $list = WPvivid_Setting::get_option($list_name);
             foreach ($list as $k=>$backup)
             {
-                if ($key == $k)
+                if ($key === $k)
                 {
                     unset($list[$key]);
                     WPvivid_Setting::update_option($list_name, $list);
@@ -190,13 +190,13 @@ class WPvivid_Backuplist
 
     public static function get_oldest_backup_id($list)
     {
-        $oldest_id='';
-        $oldest=0;
+        $oldest_id = false;
+        $oldest = null;
         foreach ($list as $k=>$backup)
         {
             if(!array_key_exists('lock',$backup) || (isset($backup['lock']) && $backup['lock'] == '0'))
             {
-                if ($oldest == 0)
+                if ($oldest === null)
                 {
                     $oldest = $backup['create_time'];
                     $oldest_id = $k;
@@ -232,7 +232,7 @@ class WPvivid_Backuplist
         if($size>=$max_count)
         {
             $oldest_id=self::get_oldest_backup_id($list);
-            if(empty($oldest_id))
+            if ($oldest_id === false || $oldest_id === '')
             {
                 return false;
             }

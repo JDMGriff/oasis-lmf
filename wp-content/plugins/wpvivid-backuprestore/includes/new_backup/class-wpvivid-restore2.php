@@ -709,7 +709,24 @@ class WPvivid_Restore_2
 
         $sub_task=$restore_task['sub_tasks'][$key];
 
-        if($sub_task['type']=='databases')
+        if ($sub_task['type'] === 'additional_databases')
+        {
+            $ret = array(
+                'result' => 'failed',
+                'error'  => 'Unsupported backup file type: '. $sub_task['type'].'.'
+            );
+
+            $this->log->WriteLog('Restore failed. '.$ret['error'], 'notice');
+
+            $restore_task['status'] = 'error';
+            $restore_task['error'] = $ret['error'];
+            $restore_task['update_time'] = time();
+
+            update_option('wpvivid_restore_task', $restore_task, 'no');
+
+            return $ret;
+        }
+        else if($sub_task['type']=='databases')
         {
             $this->log->WriteLog('Start restoring '.$sub_task['type'].'.','notice');
 

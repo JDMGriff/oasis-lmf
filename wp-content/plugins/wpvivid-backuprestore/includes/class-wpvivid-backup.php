@@ -20,6 +20,9 @@ define('WPVIVID_BACKUP_ROOT_WP_CONTENT','wp-content');
 define('WPVIVID_BACKUP_ROOT_CUSTOM','custom');
 define('WPVIVID_BACKUP_ROOT_WP_ROOT','root');
 define('WPVIVID_BACKUP_ROOT_WP_UPLOADS','uploads');
+
+define('WPVIVID_BACKUP_ROOT_UPLOADS_RELATIVE', 'uploads-relative');
+
 class WPvivid_Backup_Task
 {
     protected $task;
@@ -2266,29 +2269,39 @@ class WPvivid_Backup_Item
 
     public function cleanup_local_backup()
     {
-        $files=array();
-        $download_dir=$this->config['local']['path'];
-        $file=$this->get_files(false);
+        $files = $this->get_files(false);
 
-        foreach ($file as $filename)
+        if (empty($files) || !is_array($files))
         {
-            $files[] = $filename;
+            return;
         }
 
-        foreach ($files as $file)
+        $configured_path = '';
+
+        if (isset($this->config['local']['path']) && is_string($this->config['local']['path']))
         {
-            $download_path = WP_CONTENT_DIR .DIRECTORY_SEPARATOR . $download_dir . DIRECTORY_SEPARATOR . $file;
-            if (file_exists($download_path))
+            $configured_path = WP_CONTENT_DIR . DIRECTORY_SEPARATOR . $this->config['local']['path'];
+        }
+
+        $default_path = WP_CONTENT_DIR . DIRECTORY_SEPARATOR . WPvivid_Setting::get_backupdir();
+
+        foreach ($files as $file_name)
+        {
+            $download_path = false;
+
+            if ($configured_path !== '')
+            {
+                $download_path = $this->get_safe_local_delete_path($configured_path, $file_name);
+            }
+
+            if ($download_path === false)
+            {
+                $download_path = $this->get_safe_local_delete_path($default_path, $file_name);
+            }
+
+            if ($download_path !== false)
             {
                 @wp_delete_file($download_path);
-            }
-            else{
-                $backup_dir=WPvivid_Setting::get_backupdir();
-                $download_path = WP_CONTENT_DIR .DIRECTORY_SEPARATOR . $backup_dir . DIRECTORY_SEPARATOR . $file;
-                if (file_exists($download_path))
-                {
-                    @wp_delete_file($download_path);
-                }
             }
         }
     }
@@ -2451,6 +2464,49 @@ class WPvivid_Backup_Item
         {
             return true;
         }
+    }
+
+    private function get_safe_local_delete_path($base_dir, $file_name)
+    {
+        if (!is_string($file_name) ||
+            $file_name === '' ||
+            basename($file_name) !== $file_name ||
+            preg_match('/\A[a-zA-Z0-9._~-]+\z/', $file_name) !== 1)
+        {
+            return false;
+        }
+
+        $real_base_dir = realpath($base_dir);
+
+        if ($real_base_dir === false || !is_dir($real_base_dir))
+        {
+            return false;
+        }
+
+        $candidate = $real_base_dir . DIRECTORY_SEPARATOR . $file_name;
+
+        if (!file_exists($candidate))
+        {
+            return false;
+        }
+
+        $real_candidate = realpath($candidate);
+
+        if ($real_candidate === false || !is_file($real_candidate))
+        {
+            return false;
+        }
+
+        $normalized_base = trailingslashit(wp_normalize_path($real_base_dir));
+
+        $normalized_candidate = wp_normalize_path($real_candidate);
+
+        if (strpos($normalized_candidate, $normalized_base) !== 0)
+        {
+            return false;
+        }
+
+        return $real_candidate;
     }
 }
 

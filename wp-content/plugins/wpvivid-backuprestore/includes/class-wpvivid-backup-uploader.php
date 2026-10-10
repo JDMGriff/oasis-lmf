@@ -22,6 +22,38 @@ class Wpvivid_BackupUploader
         add_action('wpvivid_rebuild_backup_list', array($this, 'wpvivid_rebuild_backup_list'), 10);
     }
 
+    private function get_safe_file_name($file_name)
+    {
+        if(!is_string($file_name) || $file_name==='' || strpos($file_name,"\0")!==false)
+        {
+            return false;
+        }
+
+        if(strpos($file_name,'/')!==false || strpos($file_name,'\\')!==false)
+        {
+            return false;
+        }
+
+        $file_name=wp_unslash($file_name);
+
+        if(
+            $file_name==='' ||
+            $file_name==='.' ||
+            $file_name==='..' ||
+            strpos($file_name,'/')!==false ||
+            strpos($file_name,'\\')!==false ||
+            strpos($file_name,':')!==false ||
+            preg_match('/[\x00-\x1F\x7F]/',$file_name) ||
+            validate_file($file_name)!==0 ||
+            wp_basename($file_name)!==$file_name
+        )
+        {
+            return false;
+        }
+
+        return $file_name;
+    }
+
     function cancel_upload_backup_free()
     {
         check_ajax_referer( 'wpvivid_ajax', 'nonce' );
@@ -96,7 +128,12 @@ class Wpvivid_BackupUploader
 
         try
         {
-            $file_name=sanitize_text_field($_POST['file_name']);
+            $file_name=$this->get_safe_file_name($_POST['file_name']);
+            if($file_name===false)
+            {
+                echo wp_json_encode(array('result'=>WPVIVID_FAILED,'error'=>'Invalid file name.'));
+                die();
+            }
             if (isset($file_name))
             {
                 if ($this->is_wpvivid_backup($file_name))
@@ -305,9 +342,15 @@ class Wpvivid_BackupUploader
             $chunk = isset($_REQUEST["chunk"]) ? intval(sanitize_key($_REQUEST["chunk"])) : 0;
             $chunks = isset($_REQUEST["chunks"]) ? intval(sanitize_key($_REQUEST["chunks"])) : 0;
 
-            $fileName = isset($_REQUEST["name"]) ? sanitize_text_field($_REQUEST["name"]) : $_FILES["file"]["name"];
+            $request_name=isset($_REQUEST["name"]) ? $_REQUEST["name"] : (isset($_FILES["file"]["name"])?$_FILES["file"]["name"]:'');
+            $fileName=$this->get_safe_file_name($request_name);
+            if($fileName===false)
+            {
+                echo wp_json_encode(array('result'=>'failed','error'=>'Invalid file name.'));
+                die();
+            }
             $validate = wp_check_filetype( $fileName );
-            if ( $validate['type'] == false )
+            if ( $validate['type'] == false || !isset($validate['ext']) || strtolower($validate['ext'])!=='zip' )
             {
                 echo wp_json_encode(array('result'=>'failed','error'=>"File type is not allowed."));
                 die();
@@ -390,9 +433,25 @@ class Wpvivid_BackupUploader
             $files=sanitize_text_field($_POST['files']);
             $files =stripslashes($files);
             $files =json_decode($files,true);
-            if(is_null($files))
+            if(!is_array($files) || empty($files))
             {
                 die();
+            }
+
+            foreach($files as $key=>$file)
+            {
+                if(!is_array($file) || !isset($file['name']))
+                {
+                    echo wp_json_encode(array('result'=>WPVIVID_FAILED,'error'=>'Invalid file name.'));
+                    die();
+                }
+                $safe_name=$this->get_safe_file_name($file['name']);
+                if($safe_name===false)
+                {
+                    echo wp_json_encode(array('result'=>WPVIVID_FAILED,'error'=>'Invalid file name.'));
+                    die();
+                }
+                $files[$key]['name']=$safe_name;
             }
 
             $path=WP_CONTENT_DIR.DIRECTORY_SEPARATOR.WPvivid_Setting::get_backupdir().DIRECTORY_SEPARATOR;
@@ -580,6 +639,8 @@ class Wpvivid_BackupUploader
     }
 
     function _rescan_local_folder_set_backup(){
+        $ret = array();
+
         $path=WP_CONTENT_DIR.DIRECTORY_SEPARATOR.WPvivid_Setting::get_backupdir().DIRECTORY_SEPARATOR;
 
         $this->wpvivid_check_remove_update_backup($path);
@@ -630,37 +691,49 @@ class Wpvivid_BackupUploader
         {
             foreach ($backups as $backup_id =>$backup)
             {
-                $backup_data['result']='success';
-                $backup_data['files']=array();
+                $manifest = array();
+
                 if(empty($backup['files']))
                     continue;
-                $time=false;
+
                 foreach ($backup['files'] as $file)
                 {
-                    if($time===false)
+                    $file_size = filesize($path . $file);
+                    if ($file_size === false)
                     {
-                        if(preg_match('/[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{2}/',$file,$matches))
-                        {
-                            $backup_time=$matches[0];
-                            $time_array=explode('-',$backup_time);
-                            if(sizeof($time_array)>4)
-                                $time=$time_array[0].'-'.$time_array[1].'-'.$time_array[2].' '.$time_array[3].':'.$time_array[4];
-                            else
-                                $time=$backup_time;
-                            $time=strtotime($time);
-                        }
-                        else
-                        {
-                            $time=time();
-                        }
+                        $ret['incomplete_backup'][] = $file;
+                        continue;
                     }
 
-                    $add_file['file_name']=$file;
-                    $add_file['size']=filesize($path.$file);
-                    $backup_data['files'][]=$add_file;
+                    $manifest[] = array(
+                        'file_name' => $file,
+                        'size'      => $file_size,
+                    );
                 }
 
-                WPvivid_Backuplist::add_new_upload_backup($backup_id,$backup_data,$time,'');
+                if (!empty($manifest))
+                {
+                    if (!class_exists('WPvivid_Backup_Registration'))
+                    {
+                        include_once WPVIVID_PLUGIN_DIR . '/includes/backup-registration/class-wpvivid-backup-registration.php';
+                    }
+
+                    $registration = new WPvivid_Backup_Registration();
+                    $register_ret = $registration->register_backup(
+                        $backup_id,
+                        $manifest,
+                        array(
+                            'type'        => 'Upload',
+                            'log'         => '',
+                            'verify_md5'  => false,
+                        )
+                    );
+
+                    if ($register_ret['result'] !== WPVIVID_SUCCESS)
+                    {
+                        $ret['incomplete_backup'] = array_merge(isset($ret['incomplete_backup']) ? $ret['incomplete_backup'] : array(), $backup['files']);
+                    }
+                }
             }
         }
         $ret['result']=WPVIVID_SUCCESS;

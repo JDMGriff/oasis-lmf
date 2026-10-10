@@ -619,7 +619,17 @@ class WPvivid_Export_Import
         if(isset($_POST['post_type']))
         {
             global $wpdb;
-            $post_type = sanitize_text_field($_POST['post_type']);
+
+            $post_type = sanitize_key(wp_unslash($_POST['post_type']));
+            if (!in_array($post_type, array('post', 'page'), true))
+            {
+                echo wp_json_encode(array(
+                    'result' => 'failed',
+                    'error'  => __('Invalid post type.', 'wpvivid-backuprestore'),
+                ));
+                die();
+            }
+
             $descript_type = $post_type === 'post' ? 'posts' : 'pages';
             $btn_text = $post_type === 'post' ? __('Show Posts', 'wpvivid-backuprestore') : __('Show Pages', 'wpvivid-backuprestore');
 
@@ -676,7 +686,7 @@ class WPvivid_Export_Import
                             <td class="plugin-title column-primary">
                                 <div class="wpvivid-storage-form regular-text">
                                     <?php
-                                    $authors = $wpdb->get_col( "SELECT DISTINCT post_author FROM {$wpdb->posts} WHERE post_type = '$post_type'" );
+                                    $authors = $wpdb->get_col($wpdb->prepare("SELECT DISTINCT post_author FROM {$wpdb->posts} WHERE post_type = %s", $post_type));
                                     wp_dropdown_users(
                                         array(
                                             'class'           => 'regular-text',
@@ -1483,7 +1493,19 @@ class WPvivid_Export_Import
                     {
                         foreach ($item['export'] as $file)
                         {
-                            $path=WP_CONTENT_DIR.DIRECTORY_SEPARATOR.WPvivid_Setting::get_backupdir().DIRECTORY_SEPARATOR.WPVIVID_IMPORT_EXPORT_DIR.DIRECTORY_SEPARATOR.$file['file_name'];
+                            if (!isset($file['file_name']) || !is_string($file['file_name']))
+                            {
+                                continue;
+                            }
+
+                            $file_name = wp_unslash($file['file_name']);
+
+                            if ($file_name === '' || basename($file_name) !== $file_name || preg_match('/\A[a-zA-Z0-9._~-]+\z/', $file_name) !== 1)
+                            {
+                                continue;
+                            }
+
+                            $path=WP_CONTENT_DIR.DIRECTORY_SEPARATOR.WPvivid_Setting::get_backupdir().DIRECTORY_SEPARATOR.WPVIVID_IMPORT_EXPORT_DIR.DIRECTORY_SEPARATOR.$file_name;
                             @wp_delete_file($path);
                         }
                     }
@@ -2350,71 +2372,98 @@ class WPvivid_Export_Import
         }
 
         $ret['html']=false;
-        if(isset($_POST['files']))
+
+        if (!isset($_POST['files']) || !is_string($_POST['files']))
         {
-            $files =sanitize_text_field($_POST['files']);
-            $files =stripslashes($files);
-            $files =json_decode($files,true);
-            if(is_null($files))
+            $ret['result'] = WPVIVID_FAILED;
+            $ret['error'] = 'Invalid files data.';
+            echo wp_json_encode($ret);
+            die();
+        }
+
+        $files_json = wp_unslash($_POST['files']);
+        $files = json_decode($files_json, true);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($files) || empty($files))
+        {
+            $ret['result'] = WPVIVID_FAILED;
+            $ret['error'] = 'Failed to decode files.';
+            echo wp_json_encode($ret);
+            die();
+        }
+
+        $path=WP_CONTENT_DIR.DIRECTORY_SEPARATOR.WPvivid_Setting::get_backupdir().DIRECTORY_SEPARATOR.WPVIVID_IMPORT_EXPORT_DIR.DIRECTORY_SEPARATOR;
+
+        foreach ($files as $key => $file)
+        {
+            if (!is_array($file) || !isset($file['name']) || !is_string($file['name']))
             {
-                $ret['result']=WPVIVID_FAILED;
-                $ret['error']= 'Failed to decode files.';
+                $ret['result'] = WPVIVID_FAILED;
+                $ret['error'] = 'Invalid import file name.';
                 echo wp_json_encode($ret);
                 die();
             }
 
-            $path=WP_CONTENT_DIR.DIRECTORY_SEPARATOR.WPvivid_Setting::get_backupdir().DIRECTORY_SEPARATOR.WPVIVID_IMPORT_EXPORT_DIR.DIRECTORY_SEPARATOR;
+            $file_name = $file['name'];
 
-            //if(preg_match('/wpvivid-.*_.*_to_.*\.zip$/',$files[0]['name']))
-            //{
-                $data=array();
-                $check_result=true;
-                foreach ($files as $file)
-                {
-                    $res=$this->check_is_import_file($path.$file['name']);
-                    if($res['result'] =='success')
-                    {
-                        $add_file['file_name']=$file['name'];
-                        $add_file['size']=filesize($path.$file['name']);
-                        $add_file['export_type']=$res['export_type'];
-                        $add_file['export_comment']=$res['export_comment'];
-                        $add_file['posts_count']=$res['posts_count'];
-                        $add_file['media_size']=size_format($res['media_size'],2);
-                        $add_file['time']=$res['time'];
-                        $data[]=$add_file;
-                    }
-                    else
-                    {
-                        $check_result=false;
-                    }
-                }
+            if ($file_name === '' ||
+                $file_name === '.' ||
+                $file_name === '..' ||
+                strpos($file_name, "\0") !== false ||
+                strpos($file_name, '/') !== false ||
+                strpos($file_name, '\\') !== false ||
+                strpos($file_name, ':') !== false ||
+                basename($file_name) !== $file_name ||
+                validate_file($file_name) !== 0 ||
+                preg_match('/\A[a-zA-Z0-9._~-]+\.zip\z/i', $file_name) !== 1)
+            {
+                $ret['result'] = WPVIVID_FAILED;
+                $ret['error'] = 'Invalid import file name.';
+                echo wp_json_encode($ret);
+                die();
+            }
 
-                if($check_result === true)
-                {
-                    $ret['result']=WPVIVID_SUCCESS;
-                    $ret['data']=$data;
-                }
-                else
-                {
-                    $ret['result']=WPVIVID_FAILED;
-                    $ret['error']='Upload file failed.';
-                    foreach ($files as $file)
-                    {
-                        $this->clean_tmp_files($path, $file['name']);
-                        @wp_delete_file($path . $file['name']);
-                    }
-                }
-            /*}
+            $files[$key]['name'] = $file_name;
+        }
+
+        $data=array();
+        $check_result=true;
+        foreach ($files as $file)
+        {
+            $res=$this->check_is_import_file($path.$file['name']);
+            if($res['result'] =='success')
+            {
+                $add_file = array();
+                $add_file['file_name'] = $file['name'];
+                $add_file['size'] = filesize($path.$file['name']);
+                $add_file['export_type'] = $res['export_type'];
+                $add_file['export_comment'] = isset($res['export_comment']) ? $res['export_comment'] : 'N/A';
+                $add_file['posts_count'] = isset($res['posts_count']) ? $res['posts_count'] : 0;
+                $add_file['media_size'] = size_format(isset($res['media_size']) ? $res['media_size'] : 0, 2);
+                $add_file['time'] = isset($res['time']) ? $res['time'] : time();
+                $data[]=$add_file;
+            }
             else
             {
-                $ret['result']=WPVIVID_FAILED;
-                $ret['error']='The file is not created by WPvivid backup plugin.';
-            }*/
+                $check_result=false;
+            }
         }
-        else {
+
+        if($check_result === true)
+        {
+            $ret['result']=WPVIVID_SUCCESS;
+            $ret['data']=$data;
+        }
+        else
+        {
             $ret['result']=WPVIVID_FAILED;
-            $ret['error']='Failed to post file name.';
+            $ret['error']='Upload file failed.';
+            foreach ($files as $file)
+            {
+                $this->clean_tmp_files($path, $file['name']);
+                @wp_delete_file($path . $file['name']);
+            }
         }
+
         echo wp_json_encode($ret);
         die();
     }

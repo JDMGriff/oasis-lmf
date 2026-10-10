@@ -84,8 +84,7 @@ class WPvivid_Restore_DB_WPDB_Method_2
             if($max_allowed_packet<$set_max_allowed_packet)
             {
                 $query='set global max_allowed_packet='.$set_max_allowed_packet;
-                $test=$wpdb->get_results($query);
-                var_dump($test);
+                $wpdb->get_results($query);
                 $wpdb->db_connect();
                 $max_allowed_packet =$wpdb->get_var("SELECT @@session.max_allowed_packet");
                 $this->max_allow_packet=$max_allowed_packet;

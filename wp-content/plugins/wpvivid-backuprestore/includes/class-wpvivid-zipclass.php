@@ -5,6 +5,7 @@ if (!defined('WPVIVID_PLUGIN_DIR')){
 }
 
 require_once WPVIVID_PLUGIN_DIR . '/includes/class-wpvivid-compress-default.php';
+require_once WPVIVID_PLUGIN_DIR . '/includes/class-wpvivid-extract-security.php';
 
 $wpvivid_extract_option = array();
 
@@ -403,11 +404,21 @@ class WPvivid_ZipClass extends Wpvivid_Compress_Default
         {
             $wpvivid_plugin->restore_data->write_log('start extracting file:'.$file,'notice');
             $archive = new WPvivid_PclZip($file);
-            $zip_ret = $archive->extract(WPVIVID_PCLZIP_OPT_PATH, $path,WPVIVID_PCLZIP_OPT_REPLACE_NEWER,WPVIVID_PCLZIP_CB_PRE_EXTRACT,'wpvivid_function_pre_extract_callback',WPVIVID_PCLZIP_OPT_TEMP_FILE_THRESHOLD,16);
+            WPvivid_Extract_Security::begin($path);
+            $zip_ret = $archive->extract(WPVIVID_PCLZIP_OPT_PATH, $path,WPVIVID_PCLZIP_OPT_REPLACE_NEWER,WPVIVID_PCLZIP_CB_PRE_EXTRACT,'wpvivid_function_pre_extract_security_callback_2',WPVIVID_PCLZIP_OPT_TEMP_FILE_THRESHOLD,16);
+            $path_validation_failed = WPvivid_Extract_Security::failed();
+            $path_validation_error = WPvivid_Extract_Security::error();
+            WPvivid_Extract_Security::end();
+            if($path_validation_failed)
+            {
+                $zip_ret=false;
+            }
             if(!$zip_ret)
             {
                 $ret['result']=WPVIVID_FAILED;
-                $ret['error'] = $archive->errorInfo(true);
+                $ret['error'] = $path_validation_failed
+                    ? 'WPVIVID_PCLZIP_ERR_DIRECTORY_RESTRICTION (-21): '.$path_validation_error
+                    : $archive->errorInfo(true);
                 $wpvivid_plugin->restore_data->write_log('extract finished:'.wp_json_encode($ret),'notice');
                 break;
             }
@@ -436,11 +447,21 @@ class WPvivid_ZipClass extends Wpvivid_Compress_Default
             $wpvivid_plugin->restore_data->write_log('start extracting file:'.$file,'notice');
             $wpvivid_plugin->restore_data->write_log('extract child file:'.wp_json_encode($extract_files),'notice');
             $archive = new WPvivid_PclZip($file);
-            $zip_ret = $archive->extract(WPVIVID_PCLZIP_OPT_BY_NAME,$extract_files,WPVIVID_PCLZIP_OPT_PATH, $path,WPVIVID_PCLZIP_OPT_REPLACE_NEWER,WPVIVID_PCLZIP_CB_PRE_EXTRACT,'wpvivid_function_pre_extract_callback',WPVIVID_PCLZIP_OPT_TEMP_FILE_THRESHOLD,16);
+            WPvivid_Extract_Security::begin($path);
+            $zip_ret = $archive->extract(WPVIVID_PCLZIP_OPT_BY_NAME,$extract_files,WPVIVID_PCLZIP_OPT_PATH, $path,WPVIVID_PCLZIP_OPT_REPLACE_NEWER,WPVIVID_PCLZIP_CB_PRE_EXTRACT,'wpvivid_function_pre_extract_security_callback_2',WPVIVID_PCLZIP_OPT_TEMP_FILE_THRESHOLD,16);
+            $path_validation_failed = WPvivid_Extract_Security::failed();
+            $path_validation_error = WPvivid_Extract_Security::error();
+            WPvivid_Extract_Security::end();
+            if($path_validation_failed)
+            {
+                $zip_ret=false;
+            }
             if(!$zip_ret)
             {
                 $ret['result']=WPVIVID_FAILED;
-                $ret['error'] = $archive->errorInfo(true);
+                $ret['error'] = $path_validation_failed
+                    ? 'WPVIVID_PCLZIP_ERR_DIRECTORY_RESTRICTION (-21): '.$path_validation_error
+                    : $archive->errorInfo(true);
                 $wpvivid_plugin->restore_data->write_log('extract finished:'.wp_json_encode($ret),'notice');
                 break;
             }
@@ -468,19 +489,28 @@ class WPvivid_ZipClass extends Wpvivid_Compress_Default
         {
             if(strstr($item['filename'],WPVIVID_ZIPCLASS_JSONFILE_NAME))
             {
-                $result = $archive->extract(WPVIVID_PCLZIP_OPT_BY_NAME, WPVIVID_ZIPCLASS_JSONFILE_NAME);
+                $result = $archive->extract(WPVIVID_PCLZIP_OPT_BY_NAME, WPVIVID_ZIPCLASS_JSONFILE_NAME, WPVIVID_PCLZIP_OPT_EXTRACT_AS_STRING);
                 if($result)
                 {
-                    $json = json_decode(file_get_contents(dirname($zip).WPVIVID_ZIPCLASS_JSONFILE_NAME),true);
+                    $json = json_decode($result[0]['content'],true);
                     $path = $json['root_path'];
                 }
             }
         }
-
-        $str = $archive->extract(WPVIVID_PCLZIP_OPT_PATH, $path, WPVIVID_PCLZIP_OPT_BY_NAME, $files, WPVIVID_PCLZIP_OPT_REPLACE_NEWER,WPVIVID_PCLZIP_OPT_TEMP_FILE_THRESHOLD,16);
+        WPvivid_Extract_Security::begin($path);
+        $str = $archive->extract(WPVIVID_PCLZIP_OPT_PATH, $path, WPVIVID_PCLZIP_OPT_BY_NAME, $files, WPVIVID_PCLZIP_OPT_REPLACE_NEWER,WPVIVID_PCLZIP_CB_PRE_EXTRACT,'wpvivid_function_pre_extract_security_callback_2',WPVIVID_PCLZIP_OPT_TEMP_FILE_THRESHOLD,16);
+        $path_validation_failed = WPvivid_Extract_Security::failed();
+        $path_validation_error = WPvivid_Extract_Security::error();
+        WPvivid_Extract_Security::end();
+        if($path_validation_failed)
+        {
+            $str=false;
+        }
         if(!$str){
             $flag = false;
-            $error = $archive->errorInfo(true);
+            $error = $path_validation_failed
+                ? 'WPVIVID_PCLZIP_ERR_DIRECTORY_RESTRICTION (-21): '.$path_validation_error
+                : $archive->errorInfo(true);
         }else{
             $success_num = 0;
             $error_num = 0;
@@ -1362,6 +1392,19 @@ function wpvivid_function_per_add_callback($p_event, &$p_header)
     }
 
     return 1;
+}
+
+function wpvivid_function_pre_extract_security_callback_2($p_event, &$p_header)
+{
+    if (!WPvivid_Extract_Security::validate($p_header['filename']))
+    {
+        return 2;
+    }
+
+    return wpvivid_function_pre_extract_callback(
+        $p_event,
+        $p_header
+    );
 }
 
 function wpvivid_function_pre_extract_callback($p_event, &$p_header)

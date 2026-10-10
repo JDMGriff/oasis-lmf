@@ -77,6 +77,8 @@ class WPvivid
         add_action('plugins_loaded', array($this, 'load_remote_storage'),10);
 
         include_once WPVIVID_PLUGIN_DIR . '/includes/class-wpvivid-setting.php';
+        include_once WPVIVID_PLUGIN_DIR . '/includes/class-wpvivid-option.php';
+        WPvivid_Option::maybe_upgrade();
         include_once WPVIVID_PLUGIN_DIR . '/includes/class-wpvivid-tools.php';
         include_once WPVIVID_PLUGIN_DIR . '/includes/class-wpvivid-schedule.php';
         include_once WPVIVID_PLUGIN_DIR . '/includes/class-wpvivid-taskmanager.php';
@@ -817,8 +819,18 @@ class WPvivid
                 echo wp_json_encode($json);
                 die();
             }
-            $option = sanitize_text_field($_POST['log_file_name']);
-            $log_file_name = $this->wpvivid_log->GetSaveLogFolder() . $option . '_log.txt';
+
+            $option = sanitize_text_field(wp_unslash($_POST['log_file_name']));
+            if ($option === '' || preg_match('/\A[a-zA-Z0-9_-]+\z/', $option) !== 1)
+            {
+                $json['result'] = 'failed';
+                $json['error'] = __('Invalid log file name.', 'wpvivid-backuprestore');
+                echo wp_json_encode($json);
+                die();
+            }
+
+            $log_dir = trailingslashit($this->wpvivid_log->GetSaveLogFolder());
+            $log_file_name = $log_dir . $option . '_log.txt';
 
             if (!file_exists($log_file_name)) {
                 $json['result'] = 'failed';
@@ -935,11 +947,6 @@ class WPvivid
             die();
         }
         try {
-            /*if (isset($_POST['task_id']) && !empty($_POST['task_id']) && is_string($_POST['task_id'])) {
-                $task_id = sanitize_key($_POST['task_id']);
-                $json = $this->function_realize->_backup_cancel($task_id);
-                echo wp_json_encode($json);
-            }*/
             $json = $this->function_realize->_backup_cancel();
             echo wp_json_encode($json);
         }
@@ -1167,7 +1174,10 @@ class WPvivid
             $count=WPvivid_Setting::get_max_backup_count();
             $oldest_id=WPvivid_Backuplist::check_backuplist_limit($count);
             $oldest_ids=array();
-            $oldest_ids[]=$oldest_id;
+            if ($oldest_id !== false && $oldest_id !== '' && $oldest_id !== 0 && $oldest_id !== '0')
+            {
+                $oldest_ids[] = $oldest_id;
+            }
             return $oldest_ids;
         }
     }
@@ -2355,7 +2365,19 @@ class WPvivid
      */
     private function add_clean_backup_record_event($backup_id)
     {
+        if (!is_string($backup_id) ||
+            $backup_id === '' ||
+            $backup_id === '0' ||
+            preg_match('/\A[a-zA-Z0-9_-]+\z/', $backup_id) !== 1)
+        {
+            return false;
+        }
+
         $backup=WPvivid_Backuplist::get_backup_by_id($backup_id);
+        if ($backup === false)
+        {
+            return false;
+        }
         $tasks=WPvivid_Setting::get_option('clean_task');
         $tasks[$backup_id]=$backup;
         WPvivid_Setting::update_option('clean_task',$tasks);
@@ -3965,9 +3987,19 @@ class WPvivid
                 die();
             }
 
-            $file_name=sanitize_text_field($_POST['file_name']);
+            $raw_file_name = sanitize_text_field(wp_unslash($_POST['file_name']));
+            $file_name = basename($raw_file_name);
 
-            $file_size = sanitize_key($_POST['size']);
+            if ($raw_file_name === '' || $raw_file_name !== $file_name || !preg_match('/\A[a-zA-Z0-9._~-]+\z/', $file_name))
+            {
+                echo wp_json_encode(array(
+                    'result' => WPVIVID_FAILED,
+                    'error'  => __('Invalid download file name.', 'wpvivid-backuprestore'),
+                ));
+                die();
+            }
+
+            $file_size = isset($_POST['size']) ? absint($_POST['size']) : 0;
 
             $task = WPvivid_taskmanager::get_download_task_v2($file_name);
 
@@ -4426,7 +4458,7 @@ class WPvivid
 
     public function update_last_backup_time($task)
     {
-        WPvivid_Setting::update_option('wpvivid_last_msg',$task);
+        return WPvivid_Option::update_last_backup_message($task);
     }
 
     public function update_last_backup_task($task)
@@ -4821,6 +4853,8 @@ class WPvivid
 
     public function check_file_is_a_wpvivid_backup($file_name,&$backup_id)
     {
+        $backup_id = '';
+
         if(preg_match('/wpvivid-.*_.*_.*\.zip$/',$file_name))
         {
             if(preg_match('/wpvivid-(.*?)_/',$file_name,$matches))
@@ -4833,6 +4867,8 @@ class WPvivid
                 {
                     return false;
                 }
+
+                $backup_id = $id;
                 return true;
             }
             else

@@ -2335,6 +2335,16 @@ class WPvivid_Uploads_Cleaner
                     $uploads_files[$post]=$media;
             }
 
+            // Bricks Builder images
+            $media = $uploads_scanner->get_media_from_bricks($post);
+
+            if (!empty($media)) {
+                if (isset($uploads_files[$post]))
+                    $uploads_files[$post] = array_merge($uploads_files[$post], $media);
+                else
+                    $uploads_files[$post] = $media;
+            }
+
             //fix theme WpResidence
             $media=$uploads_scanner->get_media_from_wpresidence($post);
 
@@ -2507,6 +2517,16 @@ class WPvivid_Uploads_Cleaner
                     $uploads_files[$post]=array_merge($uploads_files[$post],$media);
                 else
                     $uploads_files[$post]=$media;
+            }
+
+            // Bricks Builder images
+            $media = $uploads_scanner->get_media_from_bricks($post);
+
+            if (!empty($media)) {
+                if (isset($uploads_files[$post]))
+                    $uploads_files[$post] = array_merge($uploads_files[$post], $media);
+                else
+                    $uploads_files[$post] = $media;
             }
 
             //fix theme WpResidence
@@ -2920,13 +2940,13 @@ class WPvivid_Uploads_Cleaner
         $search='';
         if(isset($_POST['search']))
         {
-            $search=$_POST['search'];
+            $search=sanitize_text_field(wp_unslash($_POST['search']));
         }
 
         $folder='';
         if(isset($_POST['folder']))
         {
-            $folder=$_POST['folder'];
+            $folder=sanitize_text_field(wp_unslash($_POST['folder']));
         }
 
         $result=$scanner->get_scan_result($search,$folder);
@@ -2959,14 +2979,13 @@ class WPvivid_Uploads_Cleaner
             $search='';
             if(isset($_POST['search']))
             {
-                $search=$_POST['search'];
-
+                $search=sanitize_text_field(wp_unslash($_POST['search']));
             }
 
             $folder='';
             if(isset($_POST['folder']))
             {
-                $folder=$_POST['folder'];
+                $folder=sanitize_text_field(wp_unslash($_POST['folder']));
             }
 
             $list=new WPvivid_Unused_Upload_Files_List();
@@ -3058,13 +3077,13 @@ class WPvivid_Uploads_Cleaner
             $search='';
             if(isset($_POST['search']))
             {
-                $search=$_POST['search'];
+                $search=sanitize_text_field(wp_unslash($_POST['search']));
             }
 
             $folder='';
             if(isset($_POST['folder']))
             {
-                $folder=$_POST['folder'];
+                $folder=sanitize_text_field(wp_unslash($_POST['folder']));
             }
 
             $list=new WPvivid_Unused_Upload_Files_List();
@@ -3124,13 +3143,13 @@ class WPvivid_Uploads_Cleaner
             $search='';
             if(isset($_POST['search']))
             {
-                $search=$_POST['search'];
+                $search=sanitize_text_field(wp_unslash($_POST['search']));
             }
 
             $folder='';
             if(isset($_POST['folder']))
             {
-                $folder=$_POST['folder'];
+                $folder=sanitize_text_field(wp_unslash($_POST['folder']));
             }
 
             $iso=new WPvivid_Isolate_Files();
@@ -3201,13 +3220,13 @@ class WPvivid_Uploads_Cleaner
             $search='';
             if(isset($_POST['search']))
             {
-                $search=$_POST['search'];
+                $search=sanitize_text_field(wp_unslash($_POST['search']));
             }
 
             $folder='';
             if(isset($_POST['folder']))
             {
-                $folder=$_POST['folder'];
+                $folder=sanitize_text_field(wp_unslash($_POST['folder']));
             }
 
             $iso=new WPvivid_Isolate_Files();
@@ -3286,16 +3305,14 @@ class WPvivid_Uploads_Cleaner
             $search='';
             if(isset($_POST['search']))
             {
-                $search=$_POST['search'];
+                $search=sanitize_text_field(wp_unslash($_POST['search']));
             }
 
             $folder='';
             if(isset($_POST['folder']))
             {
-                $folder=$_POST['folder'];
+                $folder=sanitize_text_field(wp_unslash($_POST['folder']));
             }
-
-            $folder = str_replace('\\\\', '\\', $folder);
 
             $list=new WPvivid_Isolate_Files_List();
             $iso=new WPvivid_Isolate_Files();
@@ -3351,6 +3368,12 @@ class WPvivid_Uploads_Cleaner
             $json = stripslashes($json);
             $json = json_decode($json, true);
 
+            if(!is_array($json) || !isset($json['selected']) || !is_array($json['selected']))
+            {
+                echo wp_json_encode(array('result'=>'failed','error'=>'Invalid file list.'));
+                die();
+            }
+
             $files=array_map( 'sanitize_text_field', $json['selected']);
 
             $iso=new WPvivid_Isolate_Files();
@@ -3360,16 +3383,14 @@ class WPvivid_Uploads_Cleaner
             $search='';
             if(isset($_POST['search']))
             {
-                $search=sanitize_text_field($_POST['search']);
+                $search=sanitize_text_field(wp_unslash($_POST['search']));
             }
 
             $folder='';
             if(isset($_POST['folder']))
             {
-                $folder=sanitize_text_field($_POST['folder']);
+                $folder=sanitize_text_field(wp_unslash($_POST['folder']));
             }
-
-            $folder = str_replace('\\\\', '\\', $folder);
 
             $list=new WPvivid_Isolate_Files_List();
             $iso=new WPvivid_Isolate_Files();
@@ -3415,13 +3436,13 @@ class WPvivid_Uploads_Cleaner
             $search='';
             if(isset($_POST['search']))
             {
-                $search=$_POST['search'];
+                $search=sanitize_text_field(wp_unslash($_POST['search']));
             }
 
             $folder='';
             if(isset($_POST['folder']))
             {
-                $folder=$_POST['folder'];
+                $folder=sanitize_text_field(wp_unslash($_POST['folder']));
             }
 
             $iso=new WPvivid_Isolate_Files();
@@ -3476,6 +3497,12 @@ class WPvivid_Uploads_Cleaner
             $json = stripslashes($json);
             $json = json_decode($json, true);
 
+            if(!is_array($json) || !isset($json['selected']) || !is_array($json['selected']))
+            {
+                echo wp_json_encode(array('result'=>'failed','error'=>'Invalid file list.'));
+                die();
+            }
+
             $files=$json['selected'];
 
             $iso=new WPvivid_Isolate_Files();
@@ -3484,16 +3511,14 @@ class WPvivid_Uploads_Cleaner
             $search='';
             if(isset($_POST['search']))
             {
-                $search=$_POST['search'];
+                $search=sanitize_text_field(wp_unslash($_POST['search']));
             }
 
             $folder='';
             if(isset($_POST['folder']))
             {
-                $folder=$_POST['folder'];
+                $folder=sanitize_text_field(wp_unslash($_POST['folder']));
             }
-
-            $folder = str_replace('\\\\', '\\', $folder);
 
             $list=new WPvivid_Isolate_Files_List();
             $iso=new WPvivid_Isolate_Files();
@@ -3539,13 +3564,13 @@ class WPvivid_Uploads_Cleaner
             $search='';
             if(isset($_POST['search']))
             {
-                $search=$_POST['search'];
+                $search=sanitize_text_field(wp_unslash($_POST['search']));
             }
 
             $folder='';
             if(isset($_POST['folder']))
             {
-                $folder=$_POST['folder'];
+                $folder=sanitize_text_field(wp_unslash($_POST['folder']));
             }
 
             $iso=new WPvivid_Isolate_Files();
