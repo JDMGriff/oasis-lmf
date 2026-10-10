@@ -2001,8 +2001,24 @@ ul.nav-menu > li:last-child > a:focus-visible {
     }    
 }
 /* Latest Blogs */
-.latest-blogs img {
+.latest-blogs__image,
+.latest-blogs__image-placeholder {
+    display: block;
     width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 4px;
+}
+.latest-blogs__image {
+    height: auto;
+    -o-object-fit: cover;
+       object-fit: cover;
+}
+.latest-blogs__image-placeholder {
+    background-color: var(--off-white);
+    background-image: url('images/logomark-corner-top-right.png');
+    background-position: right top;
+    background-repeat: no-repeat;
+    background-size: auto 100%;
 }
 .latest-blogs-rm::after {
     content: "";

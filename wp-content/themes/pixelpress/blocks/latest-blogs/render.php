@@ -32,7 +32,9 @@
                     <article class="flex flex-col h-full">
                         <a href="<?php the_permalink(); ?>">
                             <?php if (has_post_thumbnail()) : ?>
-                                <?php the_post_thumbnail('full'); ?>
+                                <?php the_post_thumbnail('large', ['class' => 'latest-blogs__image']); ?>
+                            <?php else : ?>
+                                <span class="latest-blogs__image-placeholder" aria-hidden="true"></span>
                             <?php endif; ?>
 
                             <div class="text-xs text-white bg-[var(--brand-red)] rounded-full px-2 py-1 inline-block mt-4 font-semibold">
