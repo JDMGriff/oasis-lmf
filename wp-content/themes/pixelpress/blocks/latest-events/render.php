@@ -30,7 +30,7 @@ $showLogomark = get_field('show_logomark');
                 <?php echo $blockTitle ?>
             </h3>
 
-            <a class="text-rm text-[var(--brand-red)] font-semibold mb-6 md:mb-0" href="/events/">
+            <a class="text-rm text-[var(--brand-red)] font-semibold mb-6 md:mb-0" href="/news-events/">
                 View all Events 
             </a>
         </div>

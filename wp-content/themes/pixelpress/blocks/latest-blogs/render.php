@@ -10,7 +10,7 @@
                 <?php echo $title ?>
             </h3>
 
-            <a class="text-rm text-[var(--brand-red)] font-semibold mb-6 md:mb-0" href="/news/">
+            <a class="text-rm text-[var(--brand-red)] font-semibold mb-6 md:mb-0" href="/news-events/">
                 View all news 
             </a>
         </div>
