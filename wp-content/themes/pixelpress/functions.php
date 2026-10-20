@@ -196,6 +196,33 @@ function pixelpress_register_model_catalogue_field() {
 }
 add_action('acf/init', 'pixelpress_register_model_catalogue_field');
 
+// Editable contact email shown on model provider pages.
+function pixelpress_register_model_provider_contact_field() {
+    if (!function_exists('acf_add_local_field_group')) {
+        return;
+    }
+
+    acf_add_local_field_group([
+        'key'    => 'group_pixelpress_model_provider_contact',
+        'title'  => 'Model provider contact',
+        'fields' => [[
+            'key'          => 'field_pixelpress_model_provider_contact_email',
+            'label'        => 'Contact email',
+            'name'         => 'provider_contact_email',
+            'type'         => 'email',
+            'instructions' => 'Enter the email address to display beneath the model provider information.',
+            'required'     => 0,
+        ]],
+        'location' => [[[
+            'param'    => 'taxonomy',
+            'operator' => '==',
+            'value'    => 'model-category',
+        ]]],
+        'style'    => 'seamless',
+    ]);
+}
+add_action('acf/init', 'pixelpress_register_model_provider_contact_field');
+
 // Register ACF Blocks
 require_once get_theme_file_path('/inc/register-blocks.php');
 

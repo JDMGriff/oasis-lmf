@@ -4,6 +4,7 @@
     $boardMembers = get_field('board_members');
     $teamContacts = get_field('team_contacts');
     $contactsTitle = get_field('contacts_title');
+    $blockId = sanitize_html_class($block['id'] ?? uniqid('board-members-'));
 ?>
 <?php if($boardMembers): ?>
 <section class="py-20 bg-[var(--off-white)]">
@@ -17,14 +18,15 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <?php foreach($boardMembers as $member):
+            <?php foreach($boardMembers as $memberIndex => $member):
                 $memberId = $member->ID;
                 $position = get_field('position', $memberId);
                 $aboutMember = get_field('about_member', $memberId);
+                $memberBioId = sprintf('member-bio-%s-board-%d-%d', $blockId, $memberIndex, $memberId);
             ?>
             <div class="flex flex-col h-full text-center">
                     <?php if (has_post_thumbnail($memberId)) : ?>
-                        <?php echo get_the_post_thumbnail($memberId, 'full', [ 'class' => 'mx-auto' ]); ?>
+                        <?php echo get_the_post_thumbnail($memberId, 'full', [ 'class' => 'board-member-headshot mx-auto' ]); ?>
                     <?php endif; ?>
 
                 <h5 class="text-xl font-semibold mt-4 mb-2">
@@ -35,11 +37,11 @@
                     <?php echo $position; ?>
                 </div>
 
-                <div id="member-bio-<?php echo $memberId; ?>" class="member-bio mb-4">
+                <div id="<?php echo esc_attr($memberBioId); ?>" class="member-bio mb-4">
                     <?php echo $aboutMember; ?>
                 </div>
 
-                <button class="member-bio-trigger text-[var(--brand-red)] mt-auto font-medium pb-1" type="button" aria-expanded="false" aria-controls="member-bio-<?php echo $memberId; ?>">
+                <button class="member-bio-trigger text-[var(--brand-red)] font-medium pb-1" type="button" aria-expanded="false" aria-controls="<?php echo esc_attr($memberBioId); ?>">
                     Read More
                 </button>
             </div>
@@ -51,14 +53,15 @@
                 <?php echo $contactsTitle ?>
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <?php foreach($teamContacts as $contact):
+                <?php foreach($teamContacts as $contactIndex => $contact):
                     $contactId = $contact->ID;
                     $position = get_field('position', $contactId);
                     $aboutMember = get_field('about_member', $contactId);
+                    $contactBioId = sprintf('member-bio-%s-contact-%d-%d', $blockId, $contactIndex, $contactId);
                 ?>
                 <div class="flex flex-col h-full text-center">
                         <?php if (has_post_thumbnail($contactId)) : ?>
-                            <?php echo get_the_post_thumbnail($contactId, 'full', [ 'class' => 'mx-auto' ]); ?>
+                            <?php echo get_the_post_thumbnail($contactId, 'full', [ 'class' => 'board-member-headshot mx-auto' ]); ?>
                         <?php endif; ?>
 
                     <h5 class="text-xl font-semibold mt-4 mb-2">
@@ -69,11 +72,11 @@
                         <?php echo $position; ?>
                     </div>
 
-                    <div id="member-bio-<?php echo $contactId; ?>" class="member-bio mb-4">
+                    <div id="<?php echo esc_attr($contactBioId); ?>" class="member-bio mb-4">
                         <?php echo $aboutMember; ?>
                     </div>
 
-                    <button class="member-bio-trigger text-[var(--brand-red)] mt-auto font-medium pb-1" type="button" aria-expanded="false" aria-controls="member-bio-<?php echo $memberId; ?>">
+                    <button class="member-bio-trigger text-[var(--brand-red)] font-medium pb-1" type="button" aria-expanded="false" aria-controls="<?php echo esc_attr($contactBioId); ?>">
                         Read More
                     </button>
                 </div>

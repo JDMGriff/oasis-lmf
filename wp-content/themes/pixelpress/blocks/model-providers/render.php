@@ -189,7 +189,6 @@
                                     <img class="w-full h-full max-h-[82px] object-contain" src="<?php echo esc_url($logo['url']); ?>" alt="<?php echo esc_attr($logo['alt'] ?: $modelProvider->name); ?>">
                                 <?php endif; ?>
                             </span>
-                            <span class="logo-card__name"><?php echo esc_html($modelProvider->name); ?></span>
                         </a>
 
                     <?php endforeach; ?>

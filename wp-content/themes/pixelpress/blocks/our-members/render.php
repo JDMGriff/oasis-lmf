@@ -5,7 +5,12 @@
     $button = get_field('button');
 
     $memberPostType = 'member';
+    $selectedMemberIds = [];
     if (is_array($selectedMembers) && !empty($selectedMembers)) {
+        $selectedMemberIds = array_values(array_filter(array_map(
+            static fn($member) => (int) (is_object($member) ? $member->ID : $member),
+            $selectedMembers
+        )));
         $firstMember = reset($selectedMembers);
         $memberPostType = get_post_type(is_object($firstMember) ? $firstMember->ID : $firstMember) ?: $memberPostType;
     } elseif (!post_type_exists($memberPostType)) {
@@ -19,13 +24,21 @@
 
     $dialogTitleId = 'member-contact-title-' . sanitize_html_class($block['id'] ?? uniqid());
 
-    $members = get_posts([
+    $memberQuery = [
         'post_type'      => $memberPostType,
         'post_status'    => 'publish',
         'posts_per_page' => -1,
         'orderby'        => 'title',
         'order'          => 'ASC',
-    ]);
+    ];
+
+    if ($selectedMemberIds) {
+        $memberQuery['post__in'] = $selectedMemberIds;
+        $memberQuery['orderby'] = 'post__in';
+        unset($memberQuery['order']);
+    }
+
+    $members = get_posts($memberQuery);
 ?>
 
 <section class="py-20 bg-[var(--off-white)]">

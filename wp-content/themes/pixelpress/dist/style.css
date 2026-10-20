@@ -2055,6 +2055,15 @@ ul.nav-menu > li:last-child > a:focus-visible {
     overflow: hidden;
     transition: max-height 350ms ease-in-out;
 }
+.board-member-headshot {
+    width: min(100%, 327px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    -o-object-fit: cover;
+       object-fit: cover;
+    -o-object-position: center;
+       object-position: center;
+}
 .text-rm:hover::after {
     transform: translateX(4px);
     transition: all .2s ease-in-out;    

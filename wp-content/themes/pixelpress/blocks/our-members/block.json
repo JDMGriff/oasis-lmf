@@ -3,7 +3,7 @@
     "apiVersion": 3,   
     "name": "pixelpress/our-members",
     "title": "Our Members",
-    "description": "Block showing 12 members of the community.",
+    "description": "Displays the selected members of the community.",
     "category": "pixelpress-components",
     "icon": "cover-image",
     "keywords": [

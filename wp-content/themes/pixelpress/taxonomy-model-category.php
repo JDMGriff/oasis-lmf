@@ -2,6 +2,8 @@
 get_header();
 
 $provider = get_queried_object();
+$providerContactEmail = (string) get_field('provider_contact_email', $provider);
+$providerContactEmail = is_email($providerContactEmail) ? $providerContactEmail : '';
 
 $getModelFallbackImage = static function ($perils) {
     $perilNames = array_column($perils ?: [], 'peril');
@@ -44,6 +46,15 @@ $getModelFallbackImage = static function ($perils) {
                     <div class="text-lg lg:text-xl leading-relaxed text-[var(--off-black-light)] mt-6">
                         <?php echo wp_kses_post(wpautop($provider->description)); ?>
                     </div>
+                <?php endif; ?>
+
+                <?php if ($providerContactEmail) : ?>
+                    <p class="mt-6 font-semibold">
+                        Contact:
+                        <a class="text-[var(--brand-red)] underline" href="mailto:<?php echo esc_attr($providerContactEmail); ?>">
+                            <?php echo esc_html($providerContactEmail); ?>
+                        </a>
+                    </p>
                 <?php endif; ?>
             </div>
         </div>

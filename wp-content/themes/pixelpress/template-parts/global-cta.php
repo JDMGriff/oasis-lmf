@@ -18,7 +18,7 @@
         <?php endif; ?>
 
         <?php if($button): ?>
-            <a class="primary-cta" href="<?php echo $button['url'] ?>">
+            <a target="_blank" class="primary-cta" href="<?php echo $button['url'] ?>">
                 <?php echo $button['title'] ?>
             </a>
         <?php endif; ?>
