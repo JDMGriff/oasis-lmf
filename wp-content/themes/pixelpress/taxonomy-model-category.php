@@ -148,7 +148,7 @@ $getModelFallbackImage = static function ($perils) {
                                         </div>
                                     <?php endif; ?>
 
-                                    <a class="inline-flex items-center gap-3 font-semibold" href="<?php echo esc_url($cardLink); ?>">
+                                    <a target="_blank" class="inline-flex items-center gap-3 font-semibold" href="<?php echo esc_url($cardLink); ?>">
                                         Learn More <span class="text-lg" aria-hidden="true">→</span>
                                     </a>
                                 </div>
