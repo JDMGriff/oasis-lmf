@@ -4,6 +4,7 @@
     <script src="https://analytics.ahrefs.com/analytics.js" data-key="sLFw3HkATo+zL3wEGSwNyw" async></script>
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1, user-scalable=no">
+
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
@@ -13,6 +14,16 @@
             ad_user_data: 'denied',
             ad_personalization: 'denied'
         });
+    </script>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-L31LR11NJ4"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-L31LR11NJ4');
     </script>
     <?php wp_head(); ?>
 </head>
