@@ -131,8 +131,8 @@ $showLogomark = get_field('show_logomark');
                             <?php echo wp_trim_words(get_the_excerpt(), 25, '...'); ?>
                         </p>
 
-                        <a class="text-rm text-[var(--brand-red)] font-semibold" href="<?php the_permalink(); ?>">
-                            Register now
+                        <a class="text-rm text-[var(--brand-red)] font-semibold" href="">
+                            Coming Soon
                         </a>
                     </article>
 

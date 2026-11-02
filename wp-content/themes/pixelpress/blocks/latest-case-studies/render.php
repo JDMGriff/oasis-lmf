@@ -13,7 +13,7 @@
                             <?php echo $blockEyebrow; ?>
                         </p>
                     <?php endif; ?>
-                    <h3 class="mb-4">
+                    <h3 class="mb-4 font-bold">
                         <?php echo $blockTitle ?>
                     </h3>
                 </div>

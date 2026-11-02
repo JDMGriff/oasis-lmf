@@ -24,6 +24,16 @@ function wpdocs_theme_name_scripts() {
     wp_enqueue_style( 'style', get_stylesheet_uri() );
     wp_enqueue_style('globals', get_template_directory_uri() . '/dist/style.css', array(), '1.0.0', 'all');
     wp_enqueue_style(
+        'silktide-consent-manager',
+        get_template_directory_uri() . '/dist/vendor/silktide-consent-manager.css',
+        array(),
+        '2.0.1'
+    );
+    wp_add_inline_style(
+        'silktide-consent-manager',
+        '#stcm-wrapper{--boxShadow:-5px 5px 10px 0 #00000012,0 0 50px 0 #0000001a;--fontFamily:"Helvetica Neue","Segoe UI",Arial,sans-serif;--primaryColor:#D9272D;--backgroundColor:#FFFFFF;--textColor:#4B494B;--backdropBackgroundColor:#00000033;--backdropBackgroundBlur:0px;--iconColor:#FFFFFF;--iconBackgroundColor:#D9272D;}'
+    );
+    wp_enqueue_style(
         'pixelpress-app',
         get_template_directory_uri() . '/dist/app.css',
         array(),
@@ -36,6 +46,58 @@ function wpdocs_theme_name_scripts() {
         array(),
         filemtime(get_template_directory() . '/dist/app.js'),
         true
+    );
+    wp_enqueue_script(
+        'silktide-consent-manager',
+        get_template_directory_uri() . '/dist/vendor/silktide-consent-manager.js',
+        array(),
+        '2.0.1',
+        false
+    );
+    wp_add_inline_script(
+        'silktide-consent-manager',
+        <<<'JS'
+window.silktideConsentManager.init({
+    backdrop: { show: true },
+    icon: { position: 'bottomLeft' },
+    prompt: { position: 'bottomRight' },
+    consentTypes: [
+        {
+            id: 'essential',
+            label: 'Essential',
+            description: '<p>These cookies are necessary for the website to function properly and cannot be switched off. They help with functions such as saving your privacy preferences.</p>',
+            required: true
+        },
+        {
+            id: 'analytics',
+            label: 'Analytics',
+            description: '<p>These cookies help us improve the site by showing us which pages are most popular and how visitors move around the site.</p>',
+            required: false,
+            defaultValue: false,
+            gtag: 'analytics_storage'
+        }
+    ],
+    text: {
+        prompt: {
+            description: '<p>We use essential cookies to make this site work. With your permission, we would also like to use analytics cookies to understand how the site is used.</p>',
+            acceptAllButtonText: 'Accept all',
+            acceptAllButtonAccessibleLabel: 'Accept all cookies',
+            rejectNonEssentialButtonText: 'Reject non-essential',
+            rejectNonEssentialButtonAccessibleLabel: 'Reject all non-essential cookies',
+            preferencesButtonText: 'Preferences',
+            preferencesButtonAccessibleLabel: 'Choose cookie preferences'
+        },
+        preferences: {
+            title: 'Cookie preferences',
+            description: '<p>You can choose whether to allow analytics cookies. Essential cookies cannot be disabled.</p>',
+            saveButtonText: 'Save and close',
+            saveButtonAccessibleLabel: 'Save your cookie preferences',
+            creditLinkText: 'Cookie settings by Silktide',
+            creditLinkAccessibleLabel: 'Learn about the Silktide consent manager'
+        }
+    }
+});
+JS
     );
     wp_localize_script('pixelpress-app', 'pixelpressAjax', array(
         'url'   => admin_url('admin-ajax.php'),
