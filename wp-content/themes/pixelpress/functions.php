@@ -23,16 +23,18 @@ add_action( 'init', 'register_my_menus' );
 function wpdocs_theme_name_scripts() {
     wp_enqueue_style( 'style', get_stylesheet_uri() );
     wp_enqueue_style('globals', get_template_directory_uri() . '/dist/style.css', array(), '1.0.0', 'all');
-    wp_enqueue_style(
-        'silktide-consent-manager',
-        get_template_directory_uri() . '/dist/vendor/silktide-consent-manager.css',
-        array(),
-        '2.0.1'
-    );
-    wp_add_inline_style(
-        'silktide-consent-manager',
-        '#stcm-wrapper{--boxShadow:-5px 5px 10px 0 #00000012,0 0 50px 0 #0000001a;--fontFamily:"Helvetica Neue","Segoe UI",Arial,sans-serif;--primaryColor:#D9272D;--backgroundColor:#FFFFFF;--textColor:#4B494B;--backdropBackgroundColor:#00000033;--backdropBackgroundBlur:0px;--iconColor:#FFFFFF;--iconBackgroundColor:#D9272D;}'
-    );
+    if (!is_user_logged_in()) {
+        wp_enqueue_style(
+            'silktide-consent-manager',
+            get_template_directory_uri() . '/dist/vendor/silktide-consent-manager.css',
+            array(),
+            '2.0.1'
+        );
+        wp_add_inline_style(
+            'silktide-consent-manager',
+            '#stcm-wrapper{--boxShadow:-5px 5px 10px 0 #00000012,0 0 50px 0 #0000001a;--fontFamily:"Helvetica Neue","Segoe UI",Arial,sans-serif;--primaryColor:#D9272D;--backgroundColor:#FFFFFF;--textColor:#4B494B;--backdropBackgroundColor:#00000033;--backdropBackgroundBlur:0px;--iconColor:#FFFFFF;--iconBackgroundColor:#D9272D;}'
+        );
+    }
     wp_enqueue_style(
         'pixelpress-app',
         get_template_directory_uri() . '/dist/app.css',
@@ -47,16 +49,17 @@ function wpdocs_theme_name_scripts() {
         filemtime(get_template_directory() . '/dist/app.js'),
         true
     );
-    wp_enqueue_script(
-        'silktide-consent-manager',
-        get_template_directory_uri() . '/dist/vendor/silktide-consent-manager.js',
-        array(),
-        '2.0.1',
-        false
-    );
-    wp_add_inline_script(
-        'silktide-consent-manager',
-        <<<'JS'
+    if (!is_user_logged_in()) {
+        wp_enqueue_script(
+            'silktide-consent-manager',
+            get_template_directory_uri() . '/dist/vendor/silktide-consent-manager.js',
+            array(),
+            '2.0.1',
+            false
+        );
+        wp_add_inline_script(
+            'silktide-consent-manager',
+            <<<'JS'
 window.silktideConsentManager.init({
     backdrop: { show: true },
     icon: { position: 'bottomLeft' },
@@ -98,7 +101,8 @@ window.silktideConsentManager.init({
     }
 });
 JS
-    );
+        );
+    }
     wp_localize_script('pixelpress-app', 'pixelpressAjax', array(
         'url'   => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('pixelpress_load_more'),

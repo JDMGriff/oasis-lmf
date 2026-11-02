@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
+    <?php if (!is_user_logged_in()) : ?>
     <script src="https://analytics.ahrefs.com/analytics.js" data-key="sLFw3HkATo+zL3wEGSwNyw" async></script>
+    <?php endif; ?>
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1, user-scalable=no">
 
+    <?php if (!is_user_logged_in()) : ?>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
@@ -25,6 +28,7 @@
 
         gtag('config', 'G-L31LR11NJ4');
     </script>
+    <?php endif; ?>
     <?php wp_head(); ?>
 </head>
 
