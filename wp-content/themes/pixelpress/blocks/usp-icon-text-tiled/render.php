@@ -12,7 +12,7 @@ $lowerBlockCopy = get_field('lower_block_copy')
                 <?php echo $title ?>
             </h3>
 
-            <a class="text-rm text-white font-semibold mb-6 md:mb-0" href="/contact/">
+            <a class="text-rm text-white font-semibold mb-6 md:mb-0" href="mailto:info@oasislmf.org">
                 Get Support
             </a>
         </div>
