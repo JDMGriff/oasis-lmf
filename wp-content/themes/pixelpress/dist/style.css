@@ -674,6 +674,9 @@ video {
 .min-w-0{
   min-width: 0px;
 }
+.max-w-3xl{
+  max-width: 48rem;
+}
 .max-w-5xl{
   max-width: 64rem;
 }
@@ -2454,6 +2457,108 @@ button.logo-card {
     border-color: var(--brand-red);
     color: white;
     background: var(--brand-red);
+}
+
+/* Default WordPress pages, including policies and other long-form content. */
+.default-page {
+    background: var(--off-white);
+}
+.default-page__header {
+    padding: clamp(72px, 10vw, 140px) 0 clamp(52px, 7vw, 88px);
+    color: white;
+    background: linear-gradient(125deg, #151515 0%, #2f2929 55%, #d9272d 145%);
+}
+.default-page__eyebrow {
+    margin-bottom: 14px;
+    color: #f06a6e;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+.default-page__title {
+    max-width: 980px;
+    margin: 0;
+    color: white;
+    font-size: clamp(38px, 6vw, 68px);
+    font-weight: 650;
+    letter-spacing: -.035em;
+    line-height: 1.02;
+}
+.default-page__body {
+    padding: clamp(56px, 8vw, 104px) 0;
+}
+.default-page__content {
+    max-width: 880px;
+    padding: clamp(28px, 5vw, 64px);
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 18px 55px rgba(17, 17, 17, .07);
+}
+.default-page__content > :first-child {
+    margin-top: 0;
+}
+.default-page__content > :last-child {
+    margin-bottom: 0;
+}
+.default-page__content h2,
+.default-page__content h3,
+.default-page__content h4 {
+    margin: 2.25em 0 .7em;
+    color: var(--off-black);
+    font-weight: 650;
+    line-height: 1.18;
+}
+.default-page__content h2 {
+    font-size: clamp(28px, 4vw, 38px);
+}
+.default-page__content h3 {
+    font-size: clamp(23px, 3vw, 30px);
+}
+.default-page__content h4 {
+    font-size: 20px;
+}
+.default-page__content p,
+.default-page__content li {
+    color: var(--off-black-light);
+    font-size: clamp(17px, 2vw, 19px);
+    line-height: 1.75;
+}
+.default-page__content p,
+.default-page__content ul,
+.default-page__content ol,
+.default-page__content blockquote,
+.default-page__content figure {
+    margin: 0 0 1.35em;
+}
+.default-page__content ul,
+.default-page__content ol {
+    padding-left: 1.4em;
+}
+.default-page__content ul {
+    list-style: disc;
+}
+.default-page__content ol {
+    list-style: decimal;
+}
+.default-page__content li + li {
+    margin-top: .45em;
+}
+.default-page__content a {
+    color: var(--brand-red);
+    font-weight: 650;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+}
+.default-page__content a:hover,
+.default-page__content a:focus-visible {
+    text-decoration-thickness: 2px;
+}
+@media (max-width: 639px) {
+    .default-page__content {
+        margin-inline: -4px;
+    }
 }
 .last\:mb-0:last-child{
   margin-bottom: 0px;
