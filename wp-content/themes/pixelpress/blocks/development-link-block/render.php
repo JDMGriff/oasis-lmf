@@ -24,9 +24,13 @@ $devSupportLinks = get_field('dev_support_links');
                     <div class="flex flex-col">
                         <?php foreach ($coreComponents as $component):
                             $link = $component['link'];
+
+                            if (empty($link['url'])) {
+                                continue;
+                            }
                         ?>
     
-                            <a class="bg-white rounded-[6px] p-8 flex items-center mb-4 transition-all duration-200 group hover:-translate-y-2 hover:shadow-md" target="_blank" href="<?php echo $link['url'] ?>" class="flex items-center">
+                            <a class="bg-white rounded-[6px] p-8 flex items-center mb-4 transition-all duration-200 group hover:-translate-y-2 hover:shadow-md" target="_blank" href="<?php echo $link['url'] ?>">
                                 <img class="mr-6" src="<?php echo get_template_directory_uri() ?>/dist/images/core-component-icon.svg" alt="Core Component Icon">
     
                                 <h5 class="text-lg font-semibold">
@@ -52,9 +56,13 @@ $devSupportLinks = get_field('dev_support_links');
                     <div class="flex flex-col">
                         <?php foreach ($devSupportLinks as $devLink):
                             $link = $devLink['link'];
+
+                            if (empty($link['url'])) {
+                                continue;
+                            }
                         ?>
     
-                            <a class="bg-white rounded-[6px] p-8 flex items-center mb-4 transition-all duration-200 group hover:-translate-y-2 hover:shadow-md" target="_blank" href="<?php echo $link['url'] ?>" class="flex items-center">
+                            <a class="bg-white rounded-[6px] p-8 flex items-center mb-4 transition-all duration-200 group hover:-translate-y-2 hover:shadow-md" target="_blank" href="<?php echo $link['url'] ?>">
                                 <img class="mr-6" src="<?php echo get_template_directory_uri() ?>/dist/images/dev-support-icon.svg" alt="Dev Suppport Icon">
     
                                 <h5 class="text-lg font-semibold">
