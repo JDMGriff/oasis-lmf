@@ -17,9 +17,13 @@
                     $linkTitle = $link['link_title'];
                     $linkDesc = $link['link_description'];
                     $linkUrl = $link['link_url']['url'];
+
+                    if (empty($linkUrl)) {
+                        continue;
+                    }
                 ?>
 
-                    <a class="bg-white rounded-[6px] p-8 flex items-center mb-4 transition-all duration-200 group hover:-translate-y-2 hover:shadow-md" target="_blank" href="<?php echo $linkUrl ?>" class="flex items-center">
+                    <a class="bg-white rounded-[6px] p-8 flex items-center mb-4 transition-all duration-200 group hover:-translate-y-2 hover:shadow-md" target="_blank" href="<?php echo $linkUrl ?>">
                         <div class="">
                             <h5 class="text-lg font-semibold">
                                 <?php echo $linkTitle ?>

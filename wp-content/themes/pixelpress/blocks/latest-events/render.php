@@ -16,6 +16,7 @@ $blockTitle = get_field('main_title');
 $showLatestEvent = get_field('show_latest_event');
 $webinarCta = get_field('webinar_cta');
 $showLogomark = get_field('show_logomark');
+$hasWebinar = !empty($webinarCta['link']['url']);
 ?>
 
 <section class="latest-events py-20 bg-[var(--off-white)] relative">
@@ -48,7 +49,7 @@ $showLogomark = get_field('show_logomark');
                         $eventDate     = get_field('event_date', $eventId);
                         $eventLocation = get_field('event_location', $eventId);
                     ?>
-                    <article class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 bg-white rounded-[4px]">
+                    <article class="<?php echo $hasWebinar ? 'lg:col-span-2' : 'lg:col-span-3'; ?> grid grid-cols-1 md:grid-cols-2 bg-white rounded-[4px]">
                         <?php if (has_post_thumbnail()) : ?>
                             <a href="<?php the_permalink(); ?>">
                                 <?php the_post_thumbnail('full', [
@@ -91,6 +92,7 @@ $showLogomark = get_field('show_logomark');
                 <?php endif; ?>
             <?php endif; ?>
 
+            <?php if ($hasWebinar) : ?>
             <article>
                 <?php if($webinarCta['image']): ?>
                     <img class="w-full rounded-[4px]" src="<?php echo $webinarCta['image']['url'] ?>" alt="Oasis Webinar">
@@ -116,6 +118,7 @@ $showLogomark = get_field('show_logomark');
                     </a>
                 <?php endif; ?>
             </article>
+            <?php endif; ?>
         </div>        
     </div>
 </section>

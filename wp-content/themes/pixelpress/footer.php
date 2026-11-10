@@ -65,8 +65,12 @@
         </div>
     </div>
     <div class="sub-footer bg-[var(--dark-red)] mt-12 py-4">
-        <div class="container mx-auto px-4">
-            <p class="text-white text-center md:text-left">Copyright © <?php echo date('Y') ?> Oasis Loss Modelling Framework Ltd</p>
+        <div class="container mx-auto px-4 flex flex-col items-center gap-3 md:flex-row md:justify-between">
+            <p class="text-white text-center md:text-left">Copyright &copy; <?php echo date('Y') ?> Oasis Loss Modelling Framework Ltd</p>
+            <nav class="flex flex-wrap justify-center gap-x-5 gap-y-2 text-center md:justify-end" aria-label="Legal">
+                <a class="text-white underline underline-offset-4" href="<?php echo esc_url(home_url('/privacy-cookie-policy/')); ?>">Privacy &amp; Cookie Policy</a>
+                <a class="text-white underline underline-offset-4" href="<?php echo esc_url(home_url('/anti-competitive-trust-policy/')); ?>">Anti-competitive Trust Policy</a>
+            </nav>
         </div>
     </div>
 </footer>

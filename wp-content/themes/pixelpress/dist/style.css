@@ -779,6 +779,13 @@ video {
 .gap-8{
   gap: 2rem;
 }
+.gap-x-5{
+  -moz-column-gap: 1.25rem;
+       column-gap: 1.25rem;
+}
+.gap-y-2{
+  row-gap: 0.5rem;
+}
 .overflow-hidden{
   overflow: hidden;
 }
@@ -1086,6 +1093,9 @@ video {
 }
 .underline{
   text-decoration-line: underline;
+}
+.underline-offset-4{
+  text-underline-offset: 4px;
 }
 .opacity-0{
   opacity: 0;
@@ -2650,6 +2660,9 @@ button.logo-card {
   .md\:justify-end{
     justify-content: flex-end;
   }
+  .md\:justify-between{
+    justify-content: space-between;
+  }
   .md\:text-left{
     text-align: left;
   }
@@ -2673,6 +2686,9 @@ button.logo-card {
   }
   .lg\:col-span-2{
     grid-column: span 2 / span 2;
+  }
+  .lg\:col-span-3{
+    grid-column: span 3 / span 3;
   }
   .lg\:-mt-12{
     margin-top: -3rem;
